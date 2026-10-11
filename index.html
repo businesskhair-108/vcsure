@@ -1116,11 +1116,23 @@ async function doEmailAuth(){
   finally{authBusy=false;const b=$("#authSubmit");if(b){b.disabled=false;b.textContent=authMode==="signup"?"Create account":"Sign in";}}
 }
 let acceptingAuthUserId=null;
+let acceptingAuthPromise=null;
 async function acceptAuthenticatedUser(user,session){
   if(!user)return;
-  if(acceptingAuthUserId===user.id)return;
-  if(state.authed&&state.auth?.id===user.id&&state.role){render();return;}
+  /* Supabase can report the same OAuth session through getSession() and
+     onAuthStateChange(). Share the in-flight work instead of letting a second
+     callback race the first and leave the public landing page rendered. */
+  if(acceptingAuthUserId===user.id && acceptingAuthPromise){
+    await acceptingAuthPromise;
+    return;
+  }
+  if(state.authed&&state.auth?.id===user.id&&state.role){
+    view="home";
+    render();
+    return;
+  }
   acceptingAuthUserId=user.id;
+  acceptingAuthPromise=(async()=>{
   const meta=user.user_metadata||{};
   const isSameUser=state.auth&&state.auth.id===user.id;
   /* Never carry another account's local profile into a newly authenticated account. */
@@ -1139,8 +1151,16 @@ async function acceptAuthenticatedUser(user,session){
   if(!state.role)roleModal();
   else if(!onboarded())onboardModal();
   else{go("home");}
+  /* Explicitly select the portal's overview after a successful sign-in. */
+  view="home";
   render();
-  acceptingAuthUserId=null;
+  })();
+  try{
+    await acceptingAuthPromise;
+  }finally{
+    acceptingAuthUserId=null;
+    acceptingAuthPromise=null;
+  }
 }
 async function loadProfileForUser(user){
   if(!sb||!user)return null;
