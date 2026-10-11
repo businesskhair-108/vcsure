@@ -567,6 +567,10 @@ label.f{display:block;font-size:12px;font-weight:700;color:var(--ink-dim);margin
   .hc>.actions .btn{width:100%;justify-content:center}
   .hc>.actions .minilinks{justify-content:center;gap:4px 14px}
 }
+
+/* Clean, full-page onboarding */
+.entry-wrap{min-height:72vh;max-width:1060px;margin:0 auto;padding:28px 22px 64px}.entry-top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:52px}.entry-panel{max-width:650px;margin:0 auto;background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:clamp(22px,5vw,48px);box-shadow:0 18px 60px rgba(10,25,45,.07)}.entry-title{font-size:clamp(30px,5vw,44px);line-height:1.08;letter-spacing:-.04em;margin:12px 0}.entry-copy{color:var(--ink-muted,var(--ink-faint));font-size:16px;line-height:1.65;max-width:52ch;margin:0 0 26px}.entry-roles{display:grid;gap:14px}.entry-role{width:100%;display:flex;align-items:center;gap:16px;text-align:left;padding:20px;border:1px solid var(--border);border-radius:16px;background:var(--surface);color:var(--ink);cursor:pointer;transition:border-color .18s,transform .18s}.entry-role:hover{border-color:var(--navy);transform:translateY(-1px)}.entry-role>span:nth-child(2){display:grid;gap:6px;flex:1}.entry-role b{font-size:17px}.entry-role small{font-size:13px;line-height:1.5;color:var(--ink-faint)}.entry-icon{width:44px;height:44px;display:grid;place-items:center;border-radius:12px;background:var(--gold-soft);font-size:24px;color:var(--navy);flex-shrink:0}.entry-arrow{font-size:22px}.entry-foot{font-size:12px;line-height:1.6;color:var(--ink-faint);margin:22px 0 0}.auth-panel{max-width:510px}.entry-google{width:100%;justify-content:center;margin:8px 0 18px;padding:13px}.entry-divider{display:flex;align-items:center;gap:12px;color:var(--ink-faint);font-size:12px;margin:14px 0}.entry-divider span{height:1px;flex:1;background:var(--border)}.entry-submit{width:100%;margin-top:14px;padding:13px}.auth-panel .gother{width:100%;margin-top:12px}.auth-panel .formStatus{margin-top:12px}@media(max-width:600px){.entry-wrap{padding:18px 14px 42px}.entry-top{margin-bottom:28px}.entry-panel{border-radius:18px}.entry-role{padding:16px;gap:12px}.entry-icon{width:38px;height:38px}}
+
 </style>
 </head>
 <body>
@@ -643,7 +647,7 @@ function seed(){
     vcMe:{name:"",type:"Micro-VC",city:"",sectors:["SaaS"],stages:["Pre-seed"],cheque:[1,4],thesisNote:"",thesisUpdatedAt:Date.now()},
     vcs,startups,
     savedVCs:[],savedStartups:[],pipeline:{},meetings:[],
-    deckViews:[],unlocked:[],pro:{trial:false,slack:false,seats:1,since:null},
+    deckViews:[],unlocked:[],
     tour:{founder:false,vc:false},
     deckShares:[],
     partners:[{id:"p1",name:"Sarah Menon",role:"Partner"},{id:"p2",name:"Rahul Iyer",role:"Principal"},{id:"p3",name:"Aisha Khan",role:"Associate"}],
@@ -657,9 +661,10 @@ function load(){try{state=JSON.parse(localStorage.getItem(KEY))||null}catch(e){s
   if(state.vcMe&&state.vcMe.cheque&&state.vcMe.cheque[0]>0&&state.vcMe.cheque[1]>state.vcMe.cheque[0]*CHEQUE_SPREAD_CAP){
     state.vcMe.cheque=[state.vcMe.cheque[0],+(state.vcMe.cheque[0]*CHEQUE_SPREAD_CAP).toFixed(2)];
   }
+  delete state.pro;
   if(!state.tour)state.tour={founder:false,vc:false};
   if(!state.deckShares)state.deckShares=[];
-  if(typeof state.credits!=="number")state.credits=1;
+  if(typeof state.credits!=="number")state.credits=0;
   if(!state.partners)state.partners=[{id:"p1",name:"Sarah Menon",role:"Partner"},{id:"p2",name:"Rahul Iyer",role:"Principal"},{id:"p3",name:"Aisha Khan",role:"Associate"}];
   if(!state.partnerThreads)state.partnerThreads=[];
   if(!state.me.deckVersion){state.me.deckVersion=1;state.me.deckUpdatedAt=state.me.deckUpdatedAt||Date.now();state.me.deckFile=state.me.deckFile||"";state.me.deckHistory=state.me.deckHistory||[]}
@@ -720,7 +725,6 @@ function checkExpiries(){
       m.reply=investorQuiet
         ?"System pass — investor inactivity. The fund didn't respond within the 7-day window, so the request was closed automatically. This is not a decline: your intro slot is released and you're free to request other funds."
         :"System pass — founder inactivity. The founder didn't respond within the 7-day window, so the request was closed automatically. No action needed — the feed stays fresh.";
-      if(m.priority&&m.direction==="out"&&!m.refunded){m.refunded=true;state.credits++;m.reply+=" Your priority credit has been refunded.";}
       changed=true;
     }});
   if(changed){save();toast("A request closed as a system pass — the 7-day window ended");}
@@ -766,13 +770,14 @@ function shareDeckWithVC(startupId){
 }
 
 let pTab="overview";
+let entryScreen="landing"; // show the main landing page first; role selection precedes authentication
 function render(){
-  if(view==="decks"){view="profile";pTab="deck"}else if(view==="perks"){view="profile";pTab="perks"}
+  if(view==="decks"){view="profile";pTab="deck"}else if(view==="perks"){view="profile";pTab="overview"}
   if(state&&state.role==="vc"&&view==="decks")view="home";
   drawNav();drawFooter();drawDeckNotif();
   const v=$("#viewRoot");
   v.classList.toggle("portal-content",!!(state.authed&&state.role));
-  if(!state.authed){v.innerHTML=landingHTML();return;}
+  if(!state.authed){v.innerHTML=entryScreen==="auth"?authPageHTML():entryScreen==="role"?roleChoicePageHTML():landingHTML();return;}
   if(!state.role){v.innerHTML="";roleModal();return;}
   if(view==="welcome")view="home";
   checkExpiries();
@@ -802,8 +807,8 @@ messages:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-widt
 partners:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>'
 };
 function navItems(isF){return isF
-  ?[["home","Home"],["discover","Matches"],["saved","Pipeline"],["meetings","Meetings"],["messages","Messages"],["profile","Profile"]]
-  :[["home","Home"],["saved","Deals"],["discover","Matches"],["meetings","Meetings"],["messages","Messages"],["partners","Partners"],["profile","Profile"]];}
+  ?[["home","Overview"],["discover","Find investors"],["saved","Pipeline"],["meetings","Introductions"],["messages","Messages"],["profile","Profile"]]
+  :[["home","Overview"],["discover","Find startups"],["saved","Pipeline"],["meetings","Introductions"],["messages","Messages"],["profile","Fund profile"]];}
 function drawNav(){
   const n=$("#navRoot");
   if(!state.authed||!state.role){
@@ -825,7 +830,7 @@ function drawNav(){
     ${pend?`<button class="nav-tab" onclick="go('meetings')" style="color:var(--red)">${pend} new</button>`:""}</div>
     <div class="acct"><div class="who"><b>${esc(state.auth.name)}</b><span>${isF?esc(state.me.startup||""):esc(state.vcMe.name||"")}</span></div>
     <div class="gavatar">${initials(state.auth.name||"W")}</div>
-    <button class="linkout askbtn" onclick="openAssistant()" aria-label="Ask Mitra"><span class="dm">Ask Mitra</span><span class="mm">Ask</span></button>
+    <button class="linkout askbtn" onclick="openAssistant()" aria-label="Help"><span class="dm">Help</span><span class="mm">Ask</span></button>
     <button class="linkout" onclick="signOut()">Sign out</button></div></div></nav>
     <div class="bottomNav">
       ${bar.map(([k,l])=>`<button class="bTab ${view===k?"active":""}" onclick="go('${k}')">${ICONS[k]}<span>${short[l]||l}</span>${k==="meetings"&&pend?`<span class="bdg">${pend}</span>`:""}${k==="partners"&&unreadP?`<span class="bdg">${unreadP}</span>`:""}</button>`).join("")}
@@ -843,7 +848,7 @@ function moreSheet(){
 function closeMore(){$("#modalRoot").innerHTML="";}
 function drawFooter(){
   $("#footRoot").innerHTML=`<div class="footBrand"><div class="logo-mark">VS</div><b>VC Sure</b></div>
-  © 2026 Krithik Khair. All Rights Reserved. · <a href="#" onclick="exportData();return false">export data</a> · <a href="#" onclick="resetAll();return false">reset demo data</a>
+  © 2026 Krithik Khair. All Rights Reserved.${state.authed?` · <a href="#" onclick="exportData();return false">Export data</a>`:""}
   <div id="saveWarn" class="saveWarn" hidden role="alert" style="margin-top:10px">Browser storage is full or blocked — recent changes may not be saved. Export your data to keep a copy.</div>`;
 }
 
@@ -940,6 +945,30 @@ function heroUp(){
   }
 }
 
+/* ================= entry flow: role first, then full-page auth ================= */
+function showRoleChoice(){entryScreen="role";window._prefRole=null;render();window.scrollTo({top:0,behavior:"smooth"});}
+function startAuthForRole(role){window._prefRole=role;try{localStorage.setItem("vcsure_pending_role",role)}catch(_){}entryScreen="auth";authMode="signup";render();window.scrollTo({top:0,behavior:"smooth"});}
+function authBack(){entryScreen="role";authStatus("");render();}
+function roleChoicePageHTML(){
+ return `<main class="entry-wrap"><div class="entry-top"><div class="logo"><div class="logo-mark">VS</div><div>VC Sure<small>Founder–investor matching</small></div></div><button class="quiet" onclick="entryScreen='landing';render()">Learn about VCSure</button></div>
+ <section class="entry-panel"><span class="hero-eyebrow">GET STARTED</span><h1 class="entry-title">What brings you to VC Sure?</h1><p class="entry-copy">Choose your role first. We'll tailor your account setup and workspace to what you need.</p>
+ <div class="entry-roles"><button class="entry-role startup" onclick="startAuthForRole('founder')"><span class="entry-icon">↗</span><span><b>I'm a founder</b><small>Find investors who fit your sector, stage and funding needs.</small></span><span class="entry-arrow">→</span></button>
+ <button class="entry-role vcp" onclick="startAuthForRole('vc')"><span class="entry-icon">◇</span><span><b>I'm an investor</b><small>Discover relevant startups and manage your deal pipeline.</small></span><span class="entry-arrow">→</span></button></div>
+ <p class="entry-foot">Already have an account? Choose your role to continue, then switch to <b>Sign in</b>.</p></section></main>`;
+}
+function authPageHTML(){
+ const founder=window._prefRole==="founder";
+ return `<main class="entry-wrap"><div class="entry-top"><button class="quiet" onclick="authBack()">← Change role</button><div class="logo"><div class="logo-mark">VS</div><div>VC Sure<small>${founder?"Founder account":"Investor account"}</small></div></div></div>
+ <section class="entry-panel auth-panel"><span class="hero-eyebrow">${founder?"FOR FOUNDERS":"FOR INVESTORS"}</span><h1 class="entry-title" id="authHeading">${authMode==="signup"?"Create your account":"Welcome back"}</h1><p class="entry-copy">${founder?"Set up your founder account and find investors aligned with your raise.":"Set up your investor account and discover startups aligned with your thesis."}</p>
+ <button class="gbtn entry-google" onclick="doGoogleSignIn()">${GLOGO}<span>Continue with Google</span></button>
+ <div class="entry-divider"><span></span>or use email<span></span></div>
+ <div class="ginput"><label for="authEmail">Email address</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
+ <div class="ginput"><label for="authPassword">Password</label><input id="authPassword" type="password" autocomplete="${authMode==="signup"?"new-password":"current-password"}" placeholder="At least 8 characters" onkeydown="if(event.key==='Enter')doEmailAuth()"></div>
+ <button id="authSubmit" class="btn entry-submit" onclick="doEmailAuth()">${authMode==="signup"?"Create account":"Sign in"}</button>
+ <button id="authModeToggle" class="gother" onclick="toggleAuthMode()">${authMode==="signup"?"Already have an account? Sign in":"New to VC Sure? Create account"}</button>
+ <div id="authStatus" class="formStatus" role="status" aria-live="polite"></div><p class="entry-foot">Your account and profile are managed securely with Supabase.</p></section></main>`;
+}
+
 /* ================= landing ================= */
 function landingHTML(){
   heroTop=0;
@@ -947,7 +976,7 @@ function landingHTML(){
   <div class="land-nav">
     <div class="logo"><div class="logo-mark">VS</div><div>VC Sure<small>startups &harr; VCs, minus the clutter</small></div></div>
     <span style="flex:1"></span>
-    <button class="gbtn" onclick="googleModal()">Sign in</button>
+    <button class="gbtn" onclick="showRoleChoice()">Sign in</button>
   </div>
 
   <div class="land-hero">
@@ -956,13 +985,13 @@ function landingHTML(){
       <h1 class="hero">Meet the <em>right</em> VC.<br>Or the right startup.</h1>
       <p class="hero-sub">VC Sure matches startups and funds on sector, stage and cheque — shows you fit before anyone writes an email — then gets out of the way. One warm intro at a time, on a 7-day clock.</p>
       <div class="hero-cta">
-        <button class="btn" style="padding:13px 22px;font-size:15px" onclick="googleModal()">Continue with Google</button>
+        <button class="btn" style="padding:13px 22px;font-size:15px" onclick="showRoleChoice()">Get started</button>
         <button class="btn ghost" style="padding:13px 22px;font-size:15px" onclick="howScroll()">How it works</button>
       </div>
-      <div class="hero-note">Free for founders while raising · AI-polished intro notes · decks with viewing analytics</div>
+      <div class="hero-note">Clear fit reasons · structured introductions · a simpler way to find the right match</div>
     </div>
     <div class="preview">
-      <div class="float a"><span class="chip green">reply in 2 days</span><b>Thu 4:30 PM</b></div>
+      <div class="float a"><span class="chip green">example match</span><b>Fit score: 78</b></div>
       <div class="stack" id="heroStack" onpointerdown="heroDown(event)" onpointermove="heroMove(event)" onpointerup="heroUp(event)" onpointercancel="heroUp(event)">
       <div class="preview-card stk is-front">
         <div class="row"><div class="avatar" style="background:#059669">NC</div>
@@ -989,7 +1018,7 @@ function landingHTML(){
         <div class="actions"><button class="btn sm">Request meeting</button><button class="btn sm ghost">Shortlist</button></div>
       </div>
       </div>
-      <div class="float b"><span class="chip red">7-day window</span><span style="font-size:12px">unanswered requests become clear system passes</span></div>
+      <div class="float b"><span class="chip red">7-day window</span><span style="font-size:12px">clear timelines for introductions</span></div>
     </div>
   </div>
 
@@ -1004,11 +1033,11 @@ function landingHTML(){
         <ul>
           <li>Fit scores from sector, stage and cheque — not who you know</li>
           <li>VC sprint theses refresh quarterly; stale theses are flagged</li>
-          <li>AI coach toughens your two-line note before it sends</li>
-          <li>Every request gets an answer within 7 days — or it closes as a system pass, never silence</li>
-          <li>Deck analytics: see exactly how long each fund spends on each slide</li>
+          <li>Clear introduction notes help explain why each match is relevant</li>
+          <li>Requests have a clear 7-day response window and status</li>
+          <li>Keep your pitch deck and introduction activity organised in one place</li>
         </ul>
-        <button class="btn" onclick="googleModal('founder')">Join as a startup</button>
+        <button class="btn" onclick="startAuthForRole('founder')">Join as a startup</button>
       </div>
       <div class="portal vcp">
         <span class="tag" style="color:var(--navy)">For VCs</span>
@@ -1020,7 +1049,7 @@ function landingHTML(){
           <li>Decks open natively — no downloads, no email attachments</li>
           <li>Accept or pass in one click; the 7-day window keeps feeds moving</li>
         </ul>
-        <button class="btn navy" onclick="googleModal('vc')">Join as a VC</button>
+        <button class="btn navy" onclick="startAuthForRole('vc')">Join as a VC</button>
       </div>
     </div>
   </div>
@@ -1031,38 +1060,22 @@ function landingHTML(){
     <div class="steps">
       <div class="step"><span class="n">01</span><b>Sign in, set your card</b><span>Google gets you in; four fields build your card or thesis. Nothing else is asked.</span></div>
       <div class="step"><span class="n">02</span><b>See fit, not noise</b><span>Startups see funds sorted by fit and thesis freshness; VCs see deal flow filtered to their thesis.</span></div>
-      <div class="step"><span class="n">03</span><b>One warm intro, on a clock</b><span>The AI coach polishes your note. Requests get a slot or a polite pass within 7 days — or they expire, and everyone moves on.</span></div>
+      <div class="step"><span class="n">03</span><b>One warm intro, on a clock</b><span>A clear introduction explains the fit. Requests get a slot or a polite pass within 7 days — or they expire, and everyone moves on.</span></div>
     </div>
   </div>
-  <div class="note">Prototype: Google sign-in, funds, startups, replies and analytics are simulated. Real deployment needs OAuth + backend.</div>
+  <div class="hero-note" style="margin-top:22px">Matching quality depends on complete, up-to-date founder and fund profiles.</div>
   </div>`;
 }
 function howScroll(){const e=document.getElementById("how");if(e)e.scrollIntoView({behavior:"smooth"})}
 
-/* ================= google sign-in (simulated) ================= */
+/* ================= authentication ================= */
 const GLOGO=`<svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="M6.306 14.691l6.571 4.849C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.257-2.231 4.166-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>`;
-function googleModal(prefRole){
-  authMode="signin";
-  window._prefRole=prefRole||null;
-  modal(`<div class="gmodal" style="background:var(--surface)">
-    <div style="margin-bottom:14px">${GLOGO.replace("width=\"18\" height=\"18\"","width=\"40\" height=\"40\"")}</div>
-    <h2 id="authHeading">Sign in</h2>
-    <div class="gsub">to continue to <b>VC Sure</b></div>
-    <button class="gbtn" style="width:100%;justify-content:center" onclick="doGoogleSignIn()">${GLOGO}<span>Continue with Google</span></button>
-    <div style="display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--ink-faint);font-size:12px"><span style="height:1px;background:var(--border);flex:1"></span>or continue with email<span style="height:1px;background:var(--border);flex:1"></span></div>
-    <div class="ginput" style="margin-top:0"><label for="authEmail">Email</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
-    <div class="ginput"><label for="authPassword">Password</label><input id="authPassword" type="password" autocomplete="current-password" placeholder="At least 8 characters" onkeydown="if(event.key==='Enter')doEmailAuth()"></div>
-    <div class="grow" style="margin-top:18px"><button class="gcancel" onclick="closeModal()">Cancel</button><button id="authSubmit" class="gnext" onclick="doEmailAuth()">Sign in</button></div>
-    <button id="authModeToggle" class="gother" style="margin-top:10px" onclick="toggleAuthMode()">New to VC Sure? Create account</button>
-    <div id="authStatus" class="formStatus" role="status" aria-live="polite"></div>
-    <div class="gsub" style="margin:12px 0 0;font-size:11.5px">Your password is handled by Supabase Auth, not stored in this app.</div>
-  </div>`);
-}
+function googleModal(prefRole){if(prefRole)window._prefRole=prefRole;else if(!window._prefRole){showRoleChoice();return;}entryScreen="auth";authMode="signin";render();}
 function toggleAuthMode(){
   authMode=authMode==="signin"?"signup":"signin";
   const signup=authMode==="signup";
   const h=$("#authHeading"),b=$("#authSubmit"),t=$("#authModeToggle"),pw=$("#authPassword");
-  if(h)h.textContent=signup?"Create your account":"Sign in";
+  if(h)h.textContent=signup?"Create your account":"Welcome back";
   if(b)b.textContent=signup?"Create account":"Sign in";
   if(t)t.textContent=signup?"Already have an account? Sign in":"New to VC Sure? Create account";
   if(pw)pw.autocomplete=signup?"new-password":"current-password";
@@ -1175,13 +1188,13 @@ async function initAuth(){
   render();
 }
 function signIn(email,name){
-  /* Kept only as a compatibility shim: simulated sign-in is deliberately disabled. */
-  googleModal(window._prefRole||null);
-  authStatus("Use Google or enter your email and password to continue.");
+  /* Compatibility shim: route legacy entry points to the real authentication page. */
+  if(!window._prefRole){showRoleChoice();return;}
+  entryScreen="auth";authMode="signin";render();
 }
 async function signOut(){
   if(sb){try{const {error}=await sb.auth.signOut();if(error)console.error("VCSure sign-out failed",error);}catch(err){console.error("VCSure sign-out failed",err);}}
-  state.authed=false;state.auth={name:"",email:""};state.role=null;save();go("welcome");
+  state.authed=false;state.auth={name:"",email:""};state.role=null;entryScreen="role";save();go("welcome");
 }
 function onboarded(){return state.role==="founder"?!!state.me.startup:!!state.vcMe.name}
 
@@ -1207,7 +1220,7 @@ async function pickRole(r){
 function onboardModal(){
   if(state.role==="founder"){
     modal(`<h2 style="margin-bottom:4px">Set up your startup card</h2>
-    <p class="dim" style="font-size:13px">Four fields — this is all a VC sees before choosing to meet you. The traction line powers your AI intro notes.</p>
+    <p class="dim" style="font-size:13px">Four fields — this is all a VC sees before choosing to meet you. Your profile helps investors understand your startup.</p>
     <label class="f">Your name</label><input type="text" id="obName" value="${esc(state.auth.name)}">
     <label class="f">Startup name</label><input type="text" id="obStartup" placeholder="e.g. KisanRate">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -1253,18 +1266,17 @@ function finishOnboard(){
     if(cc0){state.vcMe.cheque=cc0.cheque;capMsg=capNote(cc0);}
     state.vcMe.thesisUpdatedAt=Date.now();
   }
-  save();closeModal();void persistCurrentProfile();seedInbound();go("home");
+  save();closeModal();void persistCurrentProfile();go("home");
   toast(state.role==="founder"?"Funds sorted by fit are in Matches":(capMsg||"Deal flow matched to your thesis is ready"));
 }
 
 /* ================= Mitra — the VC Sure guide (replaces the first-time tour) ================= */
 const NAVL={home:"Home",discover:"Matches",meetings:"Meetings",messages:"Messages",partners:"Partners",profile:"Profile"};
-function navLabel(v,tab){const f=state.role==="founder";if(v==="saved")return f?"Pipeline":"Deals";if(v==="profile"&&tab==="deck")return "Profile → Pitch deck";if(v==="profile"&&tab==="perks")return "Profile → Perks";if(v==="partners"&&tab==="shared")return "Partners → Shared decks";return NAVL[v]||v}
+function navLabel(v,tab){const f=state.role==="founder";if(v==="saved")return f?"Pipeline":"Deals";if(v==="profile"&&tab==="deck")return "Profile → Pitch deck";if(v==="partners"&&tab==="shared")return "Partners → Shared decks";return NAVL[v]||v}
 const KB_F=[
  {k:["cancel a meeting","cancel meeting","cancel my meeting","cancel","withdraw"],a:"Open <b>Meetings</b> and tap <b>Cancel</b> on a pending or accepted meeting. Accepted meetings can also be marked <b>Mark done</b> once the call has happened.",go:["meetings"]},
  {k:["find vc","find investor","find a vc","find fund","find an investor","looking for investor","browse vc","discover","which fund","vcs","my matches","matches"],a:"Open <b>Matches</b>. Funds are sorted by how well they fit your startup. Narrow them with the <b>Sector</b>, <b>Stage</b> and <b>Cheque size</b> filters, search by name or city, or sort by cheque size. Each card shows a fit score and why you match.",go:["discover"]},
- {k:["request a meeting","request meeting","request an intro","introduction","warm intro","reach out","contact a","send request","request","intro"],a:"Open <b>Matches</b>, pick a fund and tap <b>Request meeting</b>. Write a line or two on why them, optionally tap <b>AI-check my note</b>, then <b>Send request</b>. The fund has 7 days to accept or pass.",go:["discover"]},
- {k:["priority","credit","skip the queue","faster reply","fast"],a:"In the request window, tick <b>⚡ Priority intro</b> (1 credit). It goes to the top of the fund's inbox with a 72-hour window, and your credit is refunded if they don't reply. You start with 1 credit; get more from the ⚡ button in <b>Matches</b>.",go:["discover"]},
+ {k:["request a meeting","request meeting","request an intro","introduction","warm intro","reach out","contact a","send request","request","intro"],a:"Open <b>Matches</b>, pick a fund and tap <b>Request meeting</b>. Write a line or two on why them, optionally tap <b>Review my note</b>, then <b>Send request</b>. The fund has 7 days to accept or pass.",go:["discover"]},
  {k:["match score","fit score","score","matching","how does match","fit ring","what does the match"],a:"The score (0–100) compares your startup with each fund: <b>sector</b>, <b>stage</b>, and whether your raise fits their <b>cheque range</b>. The chips under each fund explain why you match. Change your details in <b>Profile → Open Settings</b> and scores update instantly.",go:["profile"]},
  {k:["fresh","stale","thesis updated","green chip","red chip"],a:"The freshness chip on a fund card shows when it last updated its thesis. Green means current, red means stale — so you know if its focus is still what it says."},
  {k:["shortlist","save a","save to","pipeline","track fund","saved"],a:"On a fund's card in <b>Matches</b>, tap <b>Shortlist</b>. Shortlisted funds collect in <b>Pipeline</b>, where you can request a meeting when you're ready — one at a time works best.",go:["saved"]},
@@ -1273,11 +1285,10 @@ const KB_F=[
  {k:["edit my","update my","change my","profile","settings","startup details","traction","my raise","sector","stage"],a:"Open <b>Profile</b> and tap <b>Open Settings</b> to edit your sector, stage, raise amount and traction. Fit scores recalculate immediately.",go:["profile"]},
  {k:["share my deck","share deck","share pitch","deck link","send my deck"],a:"Open <b>Profile → Pitch deck</b>, tap <b>Preview my deck</b>, then <b>Share</b> to copy your deck link. Funds you've accepted open it in the secure viewer.",go:["profile","deck"]},
  {k:["edit deck","edit my deck","upload deck","upload my deck","new version","update deck"],a:"Open <b>Profile → Pitch deck</b> and tap <b>Edit deck</b> to upload or update it.",go:["profile","deck"]},
- {k:["who viewed","who opened","deck views","analytics","unlock","how long","heatmap"],a:"<b>Profile → Pitch deck</b> shows each fund that opened your deck and how long they spent. Advanced analytics (slide heatmap, drop-off, forwarding) unlock for ₹999 per view.",go:["profile","deck"]},
+ {k:["who viewed","who opened","deck views","analytics","how long","heatmap"],a:"<b>Profile → Pitch deck</b> shows recorded deck views and time spent when viewing data is available.",go:["profile","deck"]},
  {k:["pitch deck","my deck","deck"],a:"Open <b>Profile → Pitch deck</b>. Use <b>Edit deck</b> to change it and <b>Preview my deck</b> to see what funds see.",go:["profile","deck"]},
  {k:["status","expired","system pass","declined","accepted","completed","cancelled","what does requested"],a:"<b>Requested</b>: waiting, closes after 7 days (3 for priority). <b>Accepted</b>: the fund agreed — chat in Messages. <b>Declined</b>: they passed. <b>Completed</b>: you marked it done. <b>System pass</b>: the fund didn't reply in time — not a decline, and any priority credit is refunded. <b>Cancelled</b>: closed by you or the fund.",go:["meetings"]},
- {k:["perk","cloud credit","aws","discount"],a:"Open <b>Profile → Perks</b> for cloud credits, banking and other offers. They never affect your fit scores.",go:["profile","perks"]},
- {k:["price","pricing","cost","fee","free","subscription","how much"],a:"VC Sure is free while you raise. A flat ₹40,000 success fee applies only when a round closes through a VC Sure intro. Optional extras: deck analytics (₹999 per unlock) and Priority intro credits."},
+ {k:["price","pricing","cost","fee","free","subscription","how much"],a:"Check the current VCSure pricing and service terms before relying on any fee or payment arrangement."},
  {k:["accept","pass on","incoming","wants to meet","respond to"],a:"When a fund requests a meeting with you, it appears on <b>Home</b> with <b>Accept</b> and <b>Pass</b>. Accepting opens a conversation in <b>Messages</b>.",go:["home"]},
  {k:["partner message","partners","partner","internal"],a:"Partner messages are internal to a fund's team and aren't part of the Startup portal. Your conversations with funds are in <b>Messages</b>.",go:["messages"]}
 ];
@@ -1295,7 +1306,7 @@ const KB_V=[
  {k:["message","chat","talk to","conversation","reply"],a:"Open <b>Messages</b> to talk to founders (available once you accept a meeting). For internal team discussion, use <b>Partners</b>.",go:["messages"]},
  {k:["thesis","sprint","update thesis","fresh","stale"],a:"Tap <b>Update sprint thesis</b> on <b>Home</b> to refresh your sectors, stages and cheque range. Founders see changes immediately, so keep it fresh.",go:["home"]},
  {k:["edit my","update my","change my","profile","settings","fund","cheque","sectors","preferences"],a:"Open <b>Profile</b> and tap <b>Open Settings</b> to edit your fund details, sectors, stages and cheque size.",go:["profile"]},
- {k:["pro","auto-forward","slack","notion","seats","trial","price","pricing","cost"],a:"<b>Pro for funds</b> adds auto-forwarding of accepted intros to Slack/Notion and team seats. Start the 14-day trial from <b>Home</b>, then manage it in <b>Profile</b>. Browsing deal flow stays free.",go:["profile"]},
+
  {k:["status","expired","system pass","declined","completed","cancelled"],a:"Deal stages: <b>new</b>, <b>reviewing</b>, <b>meeting</b>, <b>term sheet</b>, <b>passed</b>. Meeting statuses: <b>requested</b> (7-day window), <b>accepted</b>, <b>declined</b>, <b>completed</b>, <b>cancelled</b>, and <b>system pass</b> — closed automatically when the other side didn't respond in time.",go:["meetings"]}
 ];
 let asstOpen=false,asstLog=[],asstRole=null;
@@ -1327,7 +1338,7 @@ function asstDraw(){
         :`<div class="cmsg them">${m.a}${m.go?`<div class="chatChips" style="margin:8px 0 0"><button class="chip acc" onclick="asstGo('${m.go[0]}'${m.go[1]?`,'${m.go[1]}'`:""})">Open ${navLabel(m.go[0],m.go[1])}</button></div>`:""}</div>`).join("")}
       ${showSug?`<div class="chatChips">${asstSuggest().map(s=>`<button class="chip acc" onclick="asstAsk(this.textContent)">${esc(s)}</button>`).join("")}</div>`:""}
     </div>
-    <div class="chatInput asstIn"><input id="asstText" placeholder="Ask how to do something…" aria-label="Ask Mitra" onkeydown="if(event.key==='Enter')asstAsk()"><button class="btn" onclick="asstAsk()">Ask</button></div></section>`;
+    <div class="chatInput asstIn"><input id="asstText" placeholder="Ask how to do something…" aria-label="Help" onkeydown="if(event.key==='Enter')asstAsk()"><button class="btn" onclick="asstAsk()">Ask</button></div></section>`;
   const l=$("#asstLog");if(l)l.scrollTop=l.scrollHeight;
 }
 function asstAsk(text){
@@ -1354,7 +1365,7 @@ function homeHTML(){
     <p>See which funds invest in ${esc(state.me.sector)} at ${esc(state.me.stage)} for ${cr(state.me.raising)} — then request one warm intro at a time.</p></div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
       <button class="btn" onclick="go('discover')">Browse VCs</button>
-      <button class="quiet" onclick="openAssistant()">Need help? Ask Mitra</button>
+      <button class="quiet" onclick="openAssistant()">Need help? Help</button>
     </div></div>
 
     <div class="card goldy" style="margin-bottom:18px"><b>\u20B90 while you raise.</b> <span class="dim">No subscription, ever. A flat \u20B940,000 success fee applies only after a round closes through a VC Sure intro.</span></div>
@@ -1382,7 +1393,7 @@ function homeHTML(){
       ${howOpen?`<div class="steps" style="margin-top:16px">
         <div class="step"><span class="n">01</span><b>Your card is your pitch</b><span>Sector, stage and ask decide your fit score — nothing else.</span></div>
         <div class="step"><span class="n">02</span><b>See fit before you pitch</b><span>Fit scores, the 'why', and thesis freshness on every fund card.</span></div>
-        <div class="step"><span class="n">03</span><b>One warm intro, on a clock</b><span>The AI coach toughens your note. Accepts, passes or a system pass within 7 days.</span></div>
+        <div class="step"><span class="n">03</span><b>One warm intro, on a clock</b><span>A short introduction helps explain the fit. Accepts, passes or a system pass within 7 days.</span></div>
       </div>`:""}
     </div></div>`;
   }
@@ -1392,7 +1403,7 @@ function homeHTML(){
   <p class="dim">Everything below is filtered live by your sprint thesis — keep it fresh.</p></div>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
     <button class="btn navy" onclick="go('discover')">Browse matches</button>
-    <button class="quiet" onclick="openAssistant()">Need help? Ask Mitra</button>
+    <button class="quiet" onclick="openAssistant()">Need help? Help</button>
   </div></div>
 
   <div class="card" style="margin-bottom:18px;border-color:${td>75?"rgba(180,83,9,.4)":"var(--border)"}">
@@ -1422,52 +1433,10 @@ function homeHTML(){
     <div class="cell"><b>${roleMeetings().filter(m=>m.status==="accepted"||m.status==="completed").length}</b><span>accepted intros</span></div>
   </div>
 
-  <div class="proBanner">
-    <span class="proBadge">PRO</span>
-    <h3>${state.pro.trial?`Trial active — ${proDaysLeft()} days left`:"Run your deal flow, not just browse it"}</h3>
-    <p>${state.pro.trial?"Everything is unlocked for now. Lock the founding-fund price before the trial ends — it never increases.":"Pro puts your intros and your team in one place, so no deal slips past the 7-day window."}</p>
-    <div class="proFeats">
-      <div class="proFeat"><span class="ptick">✓</span><div><b>Auto-forward intros</b>Accepted intros, founder cards and notes pushed to Slack, Notion or Affinity.</div></div>
-      <div class="proFeat"><span class="ptick">✓</span><div><b>Team pipeline</b>Associates, principals and partners pass, tag and route deals in one shared view.</div></div>
-      <div class="proFeat"><span class="ptick">✓</span><div><b>Faster replies</b>Pro funds answer 2.3x faster — before the window closes on a founder.</div></div>
-    </div>
-    <div class="proFoot">
-      ${state.pro.trial?`<button class="proCTA" onclick="upgradeModal()">Lock founding price — \u20B94,999/mo</button>`:`<button class="proCTA" onclick="startProTrial()">Start 14-day free trial</button>`}
-      <span class="proPrice"><s>\u20B99,999/mo</s> founding funds pay \u20B94,999 — locked forever · cancel anytime</span>
-    </div>
-  </div></div>`;
+  <div class="card" style="margin-top:16px"><b>Keep your pipeline moving</b><p class="dim" style="margin:6px 0 12px">Review new matches, respond to introductions, and keep your investment thesis current.</p><div class="actions"><button class="btn navy" onclick="go('saved')">Open pipeline</button><button class="btn ghost" onclick="go('meetings')">Review requests</button></div></div></div>`;
 }
 
-/* ================= premium ================= */
-function proDaysLeft(){return state.pro.since?Math.max(0,14-daysSince(state.pro.since)):14}
-function upgradeModal(){
-  const t=state.pro.trial;
-  modal(`<div class="proBanner" style="margin:0;border:none;padding:0">
-    <span class="proBadge">PRO</span>
-    <h3>${t?`Trial active — ${proDaysLeft()} days left`:"Never miss a deal. Never miss the window."}</h3>
-    <p>Pro is the difference between browsing deal flow and running it.</p>
-    <div class="proFeats">
-      <div class="proFeat"><span class="ptick">✓</span><div><b>Auto-forward intros</b>Slack, Notion and Affinity, the moment you accept.</div></div>
-      <div class="proFeat"><span class="ptick">✓</span><div><b>Team pipeline</b>Every seat, one shared view — pass, tag, route.</div></div>
-      <div class="proFeat"><span class="ptick">✓</span><div><b>Faster replies</b>Pro funds answer 2.3x faster — beat the 7-day window.</div></div>
-    </div>
-    <div class="proFoot">
-      ${t?`<button class="proCTA" onclick="closeModal()">You're on the trial</button>`:`<button class="proCTA" onclick="startProTrial()">Start 14-day free trial</button>`}
-      <span class="proPrice"><s>\u20B99,999/mo</s> founding funds pay \u20B94,999 — locked forever · cancel anytime</span>
-    </div>
-  </div>`);
-}
-function creditsModal(rid){
-  const packs=[[3,999,"Try it on your top 3 funds"],[10,2499,"Most popular \u00b7 save 17%",1],[25,4999,"Full raise \u00b7 save 33%"]];
-  modal(`<span class="proBadge">PRIORITY INTRO</span>
-  <h3 style="margin:10px 0 4px;font-size:19px">Get seen first by the funds that matter</h3>
-  <p class="dim" style="font-size:13px">Priority requests jump the queue with a 72-hour reply window. <b>If the fund stays silent, your credit comes back.</b> You only pay when it works.</p>
-  <div style="display:grid;gap:10px;margin-top:14px">${packs.map(p=>`<button class="pack ${p[3]?"hot":""}" onclick="buyCredits(${p[0]},'${rid||""}')"><span><b>${p[0]} credits</b><small>${p[2]}</small></span><span class="mono">\u20B9${p[1].toLocaleString("en-IN")}</span></button>`).join("")}</div>
-  <p class="dim" style="font-size:11.5px;margin-top:12px">Demo checkout \u2014 no real payment is taken.</p>
-  <button class="btn subtle" style="margin-top:8px" onclick="closeModal()">Not now</button>`);
-}
-function buyCredits(n,rid){state.credits+=n;save();closeModal();if(rid)requestModal(rid);else render()}
-function startProTrial(){state.pro.trial=true;state.pro.since=state.pro.since||Date.now();save();closeModal();render();toast("Pro trial started — integrations and team seats unlocked for 14 days")}
+/* Optional paid add-ons and external integrations removed. */
 
 /* VC Sure-styled dropdown (replaces native <select> so the OS/Chrome sheet never appears) */
 function dd(id,label,val,opts,setter){
@@ -1497,14 +1466,14 @@ function discoverHTML(){
   else if(dSort==="name")list=[...list].sort((a,b)=>a.name.localeCompare(b.name));
   const filtered=q||dSector!=="all"||dStage!=="all"||dCheque!=="all";
   return `<div class="stagger">
-  <div class="page-head"><div><h2 class="apptitle">${isF?"Matches":"Matches"}</h2>
+  <div class="page-head"><div><h2 class="apptitle">${isF?"Find investors":"Find startups"}</h2>
   <p>${isF?"Sorted by fit to <b>"+esc(state.me.startup)+"</b> — "+esc(state.me.sector)+", "+esc(state.me.stage)+", raising "+cr(state.me.raising)+". Freshness chips show when each fund last updated its thesis.":"Sorted by fit to your thesis — "+state.vcMe.sectors.join(", ")+", cheques of "+cr(state.vcMe.cheque[0])+" to "+cr(state.vcMe.cheque[1])+"."}</p></div></div>
+  <p class="dim" style="font-size:12px;margin:0 0 12px">Some profiles may be sample entries while the network is being populated. Verify investment details directly before making decisions.</p>
   <div class="filters" style="margin:0 0 14px" role="search">
     <div class="searchbox"><input id="dSearch" type="search" aria-label="Search" placeholder="${isF?"Search funds, cities, sectors":"Search startups, founders, cities"}" value="${esc(dQuery)}" oninput="dSearch(this)"><kbd>/</kbd></div>
     ${dd("dSector","Sector",dSector,[["all","All sectors"],...SECTORS.map(x=>[x,x])],"dSector")}
     ${dd("dStage","Stage",dStage,[["all","All stages"],...STAGES.map(x=>[x,x])],"dStage")}
     ${isF?dd("dCheque","Cheque size",dCheque,[["all","Any cheque size"],["fit","Fits my ask"]],"dCheque"):""}
-    ${isF?`<button class="btn sm gold" onclick="creditsModal()" title="Priority intro credits">\u26A1 ${state.credits} credit${state.credits===1?"":"s"}</button>`:""}
     ${dd("dSort","Sort",dSort,[["fit","Best fit"],["cheque",isF?"Largest cheque":"Largest raise"],["name","A–Z"]],"dSort")}
     ${filtered?`<button class="quiet" onclick="dClear()">Clear filters</button>`:""}
     <span class="dim" style="font-size:12.5px;margin-left:auto" aria-live="polite">${list.length} ${isF?"funds":"startups"}</span>
@@ -1558,10 +1527,6 @@ function savedHTML(){
   }
   const list=state.savedStartups.map(startupById);
   return `<div class="stagger"><div class="page-head"><div><h2 class="apptitle">Deals</h2><p>Where every saved deal stands: new, reviewing, meeting, term sheet — or passed. Pending requests expire in 7 days, so nothing stalls.</p></div></div>
-  <div class="lockTeaser" role="button" tabindex="0" onclick="upgradeModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();upgradeModal()}">
-    <span class="ltIc">${ICONS.lock}</span>
-    <div class="ltBody"><div class="ltTitle"><b>Auto-forward accepted intros to Slack / Notion</b><span class="proMini">PRO</span></div>
-    <span class="sub">Your pipeline, straight into #dealflow — your team sees deals the second you accept.</span></div></div>
   ${list.length?list.map(s=>{const st=state.pipeline[s.id]||"new";
     return `<div class="meet">
       <div class="meet-top">${logoOf(s.id)}<div class="grow">
@@ -1613,57 +1578,34 @@ function decksHTML(){
   <p>Every time a fund opens your deck in VC Sure's secure viewer, you see how long they spent — no more "did they even look at it?"</p></div>
   <div class="actions" style="margin:0"><button class="btn ghost" onclick="deckEditModal()">Edit deck</button><button class="btn" onclick="previewOwnDeck()">Preview my deck</button></div></div>
   ${views.length?views.map(v=>{
-    const un=state.unlocked.includes(v.id);
+    
     const max=Math.max(...v.perPage,1);
     return `<div class="card" style="margin-bottom:14px">
     <div class="fit"><div class="who"><div class="avatar" style="background:${v.vcColor||"#5b6b73"}">${initials(v.vcName)}</div>
       <div class="body"><b>${esc(v.vcName)}</b> opened your deck · ${ago(v.when)}
-      <div class="meta-row"><span class="chip acc">${fmtT(v.total)} total</span><span class="chip">${v.perPage.filter(s=>s>3).length} of ${v.perPage.length} slides viewed</span>${un?`<span class="chip green">advanced unlocked</span>`:`<span class="chip gold">advanced locked</span>`}</div></div></div></div>
+      <div class="meta-row"><span class="chip acc">${fmtT(v.total)} total</span><span class="chip">${v.perPage.filter(s=>s>3).length} of ${v.perPage.length} slides viewed</span></div></div></div></div>
     <div class="heat">${v.perPage.map((s,i)=>`<div class="h" style="height:${Math.max(8,Math.round(100*s/max))}%"><span>${fmtT(s)}</span><b>${i+1}</b></div>`).join("")}</div>
     <div class="dim mono" style="font-size:11px;margin-top:24px">1 Cover &nbsp; 2 Problem &nbsp; 3 Solution &nbsp; 4 Traction &nbsp; 5 Ask &nbsp; 6 Team</div>
     <div class="locked" style="margin-top:16px">
       <div class="blur"><div class="readrow"><span class="k">Drop-off</span><b>slide ${v.dropOff} — ${fmtT(v.perPage[v.dropOff-1]||0)} before leaving</b></div>
-      <div class="readrow"><span class="k">Forwarded to</span><b>${esc(v.forwardedTo||"internal review — 2 colleagues")}</b></div>
+      <div class="readrow"><span class="k">Shared with</span><b>${esc(v.forwardedTo||"internal review — 2 colleagues")}</b></div>
       <div class="readrow"><span class="k">Partner attention</span><b>${v.partnerFocus?"Partner re-read slides 4 and 5 twice":"Associate only"}</b></div></div>
-      ${un?"":`<div class="lockcover"><div class="lockcard" style="border:1px solid rgba(212,167,58,.5);background:linear-gradient(150deg,#fff,${"var(--gold-soft)"})"><span class="proMini">PRO TIP</span><b style="margin-top:8px">Unlock advanced analytics — \u20B9999 once</b>
-        <p>Funds that stare at your traction slide take second meetings 2.1x more often. See exactly where this partner's attention went: slide-by-slide heatmap, drop-off, forwarding trail.</p>
-        <button class="btn gold" onclick="unlockDeck(${v.id})">Unlock for \u20B9999</button>
-        <p style="margin:10px 0 0;font-size:11px;color:var(--ink-faint)">2,847 unlocks by founders last quarter</p></div></div>`}
+
     </div></div>`}).join("")
   :`<div class="card empty"><b>No fund has opened your deck yet</b>Request meetings from Matches — accepted intros lead to deck views.</div>`}
   </div>`;
 }
-function unlockDeck(id){state.unlocked.push(id);save();render();toast("Unlocked — advanced analytics for this deck view are yours")}
 
-/* ================= perks (founder) ================= */
-function perksHTML(){
-  const perks=[
-    ["AWS","AWS Activate","$5,000-100,000 in cloud credits, no equity, no cost.","#232f3e"],
-    ["GC","Google for Startups","Up to $20,000 Cloud credits + AI usage credits for AI-first startups.","#34a853"],
-    ["RZP","Razorpay Startups","Zero-fee payments for 6 months + payout suite free for a year.","#0c2451"],
-    ["MG","Mercury","US business banking with $500 in partner perks, built for Indian founders raising abroad.","#5b6b73"],
-    ["ZO","Zoho for Startups","One year free on Zoho One — 45+ apps, worth \u20B9 1 lakh+.","#c2410c"],
-    ["VS","Vakilsearch","Incorporation + first-year compliance at 50% off for VC Sure founders.","#b45309"],
-  ];
-  return `<div class="stagger"><div class="page-head"><div><h2 class="apptitle">Perks marketplace</h2>
-  <p>Cloud credits, banking and incorporation — free for founders, at partner prices.</p></div></div>
-  <div class="grid g2">${perks.map(([k,n,d,c])=>`<div class="card"><div class="perk">
-    <div class="plogo" style="background:${c}">${k}</div>
-    <div style="flex:1"><b>${n}</b>
-    <div class="dim" style="font-size:13px;margin-top:4px">${d}</div></div>
-    <button class="btn sm ghost" style="align-self:center" onclick="toast('Opening ${n} partner page — VC Sure earns a revenue share (demo)')">Claim</button>
-  </div></div>`).join("")}</div>
-  <div class="note" style="margin-top:14px">Sponsored placements keep VC Sure free for founders — they never affect your fit scores or feed ranking.</div>
-  </div>`;
-}
+
+/* Optional partner marketplace removed to keep the product focused. */
 
 /* ================= profile ================= */
 function profileTabsHTML(){
   if(state.role!=="founder")return profileHTML();
-  const tabs=[["overview","Startup & raise"],["deck","Pitch deck"],["perks","Perks"]];
+  const tabs=[["overview","Overview"],["deck","Pitch deck"]];
   if(!tabs.some(t=>t[0]===pTab))pTab="overview";
   const bar=`<div class="subtabs" role="tablist">${tabs.map(([k,l])=>`<button class="chip ${pTab===k?"acc":""}" role="tab" aria-selected="${pTab===k}" onclick="pTab='${k}';render()">${l}</button>`).join("")}</div>`;
-  const body=pTab==="deck"?decksHTML():pTab==="perks"?perksHTML():profileHTML();
+  const body=pTab==="deck"?decksHTML():profileHTML();
   return bar+body;
 }
 let msgSel=null;
@@ -1713,30 +1655,17 @@ function profileHTML(){
   const rows=isF
     ?[["Startup",state.me.startup],["Founder",state.me.name],["Sector",state.me.sector],["Stage",state.me.stage],["Raising",cr(state.me.raising)],["Traction",state.me.traction||"—"]]
     :[["Fund",state.vcMe.name],["Type",state.vcMe.type],["City",state.vcMe.city],["Sectors",state.vcMe.sectors.join(", ")],["Stages",state.vcMe.stages.join(", ")],["Cheque size",cr(state.vcMe.cheque[0])+" to "+cr(state.vcMe.cheque[1])],["Sprint thesis age",daysSince(state.vcMe.thesisUpdatedAt)+" days"]];
-  let extra="";
-  if(!isF){
-    const pro=state.pro;
-    extra=`<div class="card" style="margin-top:14px">
-      <div class="section-label" style="color:var(--navy)">VC Sure Pro for funds</div>
-      <div class="togglerow"><div><b>Auto-forward accepted intros to Slack / Notion</b><span class="sub">Accepted intros, founder cards and notes pushed straight into your #dealflow channel or Notion CRM (Affinity/Salesforce ready)</span></div>
-        <button class="toggle ${pro.slack?"on":""}" onclick="togglePro('slack')"></button></div>
-      <div class="togglerow"><div><b>Team seats (${pro.seats})</b><span class="sub">Associates, principals and partners pass, tag and route deals in one shared pipeline</span></div>
-        <button class="btn sm ghost" onclick="toggleSeats()">Add seat</button></div>
-      <div class="actions" style="margin-top:14px">
-        ${pro.trial?`<span class="chip green">Pro trial — ${proDaysLeft()} days left</span><button class="btn gold" onclick="upgradeModal()">Lock founding price \u20B94,999/mo</button>`:`<button class="btn gold" onclick="upgradeModal()">Start 14-day Pro trial — no card</button>`}
-        <span class="dim" style="font-size:12px;align-self:center">Browsing deal flow stays free forever</span></div>
-    </div>`;
-  }
+  const extra="";
   return `<div class="stagger">
   <div class="page-head"><div><h2 class="apptitle">Profile</h2><p>Your details, at a glance. Changes are made only in Settings.</p></div>
   <button class="btn ${isF?"":"navy"}" onclick="settingsModal()">Open Settings</button></div>
   <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
     <div class="card">
-      <div class="section-label">Google account</div>
+      <div class="section-label">Account</div>
       <div class="who"><div class="gavatar" style="width:46px;height:46px;font-size:15px">${initials(state.auth.name||"W")}</div>
         <div class="body"><b>${esc(state.auth.name)}</b>
         <div class="dim" style="font-size:13px">${esc(state.auth.email)}</div>
-        <div style="margin-top:6px"><span class="chip green">signed in with Google</span> <span class="chip">${isF?"Startup portal":"VC portal"}</span>${isF?"":" "+(state.pro.trial?`<span class="chip navy">Pro trial</span>`:"")}</div></div></div>
+        <div style="margin-top:6px"><span class="chip green">signed in with Google</span> <span class="chip">${isF?"Founder account":"Investor account"}</span></div></div></div>
     </div>
     <div class="card">
       <div class="section-label">${isF?"Startup card":"Fund profile"}</div>
@@ -1744,18 +1673,9 @@ function profileHTML(){
       <div class="note" style="margin-top:12px">These details power your fit scores everywhere. To change them, use <b>Settings</b> — nothing here is editable directly.</div>
     </div>
   </div>${extra}
-  ${isF?`<div class="card goldy" style="margin-top:14px"><b>Your plan: free while raising.</b> <span class="dim">Matching, meetings and deck viewer cost nothing. A flat \u20B940,000 success fee applies only when a round closes via a VC Sure intro — charged after the money reaches your account. Optional deck analytics: \u20B9999 per unlock.</span></div>`:""}
   </div>`;
 }
-function togglePro(k){
-  if(!state.pro.trial){toast("Pro feature — start the 14-day trial first");return;}
-  state.pro[k]=!state.pro[k];save();render();
-  toast(state.pro[k]?"Accepted intros now auto-forward to #dealflow (simulated)":"Auto-forwarding paused");
-}
-function toggleSeats(){
-  if(!state.pro.trial){toast("Pro feature — start the 14-day trial first");return;}
-  state.pro.seats++;save();render();toast("Seat added — "+state.pro.seats+" team members");
-}
+
 
 /* ================= settings ================= */
 function settingsModal(){
@@ -1912,9 +1832,8 @@ function requestModal(id){
   <label class="f">Why ${isF?"them":"this startup"}, in a line or two</label>
   <textarea id="rqNote" rows="3" placeholder="${reqPlaceholder(isVC,p)}"></textarea>
   <div id="coachMount"></div>
-  ${isF&&isVC?`<label class="prio"><input type="checkbox" id="rqPrio" ${state.credits>0?"checked":""}><span><b>\u26A1 Priority intro</b> <span class="chip gold">1 credit</span><br><span class="dim" style="font-size:12px">Top of their inbox, 72-hour reply window. <b>No reply? Credit refunded automatically.</b> You have <b>${state.credits}</b> \u00b7 <a href="#" onclick="creditsModal();return false">get more</a></span></span></label>`:""}
   <div class="actions" style="margin-top:12px">
-    ${isF?`<button class="btn sm ghost" onclick="runCoach('${id}')">AI-check my note</button>`:""}
+    ${isF?`<button class="btn sm ghost" onclick="runCoach('${id}')">Review my note</button>`:""}
   </div>
   <div style="display:flex;gap:8px;margin-top:16px"><button class="btn ${isVC?"":"navy"}" onclick="requestMeeting('${id}')">Send request</button>
   <button class="btn subtle" onclick="closeModal()">Cancel</button></div>`);
@@ -1922,26 +1841,13 @@ function requestModal(id){
 function requestMeeting(id){
   let note=$("#rqNote").value.trim()||"Would love to explore a fit.";
   const isVC=!!vcById(id);
-  const pr=$("#rqPrio");const prio=!!(pr&&pr.checked);
-  if(prio&&state.credits<1){creditsModal(id);return}
-  if(prio)state.credits--;
-  const m={id:state.seq++,party:id,side:isVC?"vc":"startup",direction:"out",note,status:"requested",slot:null,reply:null,ts:Date.now(),expiresAt:Date.now()+(prio?3*864e5:WEEK),priority:prio};
+  const m={id:state.seq++,party:id,side:isVC?"vc":"startup",direction:"out",note,status:"requested",slot:null,reply:null,ts:Date.now(),expiresAt:Date.now()+WEEK,priority:false};
   state.meetings.push(m);save();closeModal();go("meetings");
   if(state.role==="founder"){
     const r=analyzeNote(note,vcById(id));
-    toast(`Request sent (AI note score: ${r.score}/100) — you'll get a reply within 7 days`);
-  }else toast("Request sent — you'll get a reply within 7 days");
-  setTimeout(()=>respond(m.id,autoReply(m)),1800);
-}
-function autoReply(m){
-  const p=m.side==="vc"?vcById(m.party):startupById(m.party);
-  if(m.side==="vc"){
-    const f=fit(vcById(m.party),state.me);
-    if(f.score<35)return "Thanks for reaching out — your ask is outside our cheque range right now. Nothing wrong with the business; wrong fund. Revisit us after your next milestone.";
-    const slots=["Tue 11:00 AM IST","Wed 4:30 PM IST","Thu 10:00 AM IST","Fri 2:00 PM IST"];
-    return "slots:"+slots[m.id%slots.length];
-  }
-  return "slots:"+(m.note.length>25?"Mon 5:00 PM IST":"Wed 11:30 AM IST");
+    toast(`Request sent (note score: ${r.score}/100). You’ll see a response here when the other side replies.`);
+  }else toast("Request sent. You’ll see a response here when the other side replies.");
+
 }
 function respond(mid,reply){
   const m=state.meetings.find(x=>x.id===mid);if(!m||m.status!=="requested")return;
@@ -2021,57 +1927,6 @@ function sendChat(idx,text){
   save();
   if(view==="messages")msgRefresh();
   else if(view==="meetings"||view==="home")render();
-}
-function seedInbound(){
-  const forRole=state.role==="founder"?"vc":"startup";
-  if(state.meetings.some(m=>m.direction==="in"&&m.side===forRole))return;
-  if(state.role==="founder"){
-    state.meetings.push({id:state.seq++,party:"v4",side:"vc",direction:"in",
-      note:"Saw your card — we back "+state.me.sector+" founders at "+state.me.stage.toLowerCase()+". 15 minutes this week?",
-      status:"requested",slot:null,reply:null,ts:Date.now()-36e5,expiresAt:Date.now()+WEEK-36e5});
-    /* seed one historical deck view so founder sees analytics immediately */
-    if(!state.deckViews.some(v=>v.startup==="me")){
-      state.deckViews.push({id:state.seq++,startup:"me",vcName:"Nilgiris Capital",vcColor:"#059669",when:Date.now()-2*864e5,
-        perPage:[14,52,71,96,22,11],total:266,forwardedTo:"Partner — AgriTech thesis",dropOff:5,partnerFocus:true});
-    }
-  }else{
-    shareDeckWithVC("s3");
-    if(!state.partnerThreads.length){
-      const ps=state.startups[1]||state.startups[0];
-      if(ps)state.partnerThreads.push({id:state.seq++,partnerId:"p1",startupId:ps.id,deckVersion:1,sharedAt:Date.now()-2*36e5,unread:false,
-        messages:[{from:"vc",text:"Thought this could fit our agri thesis — worth 20 minutes?",ts:Date.now()-2*36e5,deck:{startup:ps.id,version:1}},
-                  {from:"partner",text:"Interesting. I'll take a look.",ts:Date.now()-1.6*36e5}]});
-    }
-    state.meetings.push({id:state.seq++,party:"s3",side:"startup",direction:"in",
-      note:"We're raising "+cr(0.8)+" — our numbers fit your thesis. Open to 15 minutes?",
-      status:"requested",slot:null,reply:null,ts:Date.now()-36e5,expiresAt:Date.now()+WEEK-36e5});
-  }
-  save();
-}
-
-/* ================= deck viewer (VC + own preview) ================= */
-let deckTimer=null;
-function buildDeck(s){
-  const t=s.traction||state.me.traction||"pilot numbers compounding month on month";
-  return [
-    {n:"cover",h:s.name,sub:s.one,body:`<div class="kpi"><div><b>${esc(s.sector)}</b><span>sector</span></div><div><b>${esc(s.stage)}</b><span>stage</span></div><div><b>${cr(s.raising)}</b><span>raising</span></div></div>`},
-    {n:"problem",h:"The problem",body:`<p>${esc(s.one)} Today this is handled manually, expensively, or not at all — and the people who feel it most have the least time to fix it.</p>`},
-    {n:"solution",h:"What we do",body:`<p>A focused product that removes the manual work end-to-end: one workflow, adopted in a day, paying for itself in the first month.</p>`},
-    {n:"traction",h:"Traction",body:`<div class="kpi"><div><b>${esc(t.split("·")[0]||t)}</b><span>signal one</span></div><div><b>${esc(t.split("·")[1]||"growing")}</b><span>signal two</span></div></div>`},
-    {n:"ask",h:"The ask",body:`<p>Raising ${cr(s.raising)} at ${esc(s.stage)} for 18 months of runway: 60% product, 25% go-to-market, 15% ops.</p>`},
-    {n:"team",h:"Why us",body:`<p>Built by ${esc(s.founder||state.me.name)} in ${esc(s.city||"India")} — close to the customer, low burn, shipping weekly.</p>`},
-  ];
-}
-/* ================= VC <-> PARTNER (internal) ================= */
-let openThreadId=null,pFilter="all",deckDraft=null,deckSavedNote=null;
-function partnerById(id){return (state.partners||[]).find(p=>p.id===id)||{name:"Partner",role:""}}
-function unreadPartners(){return (state.partnerThreads||[]).filter(t=>t.unread).length}
-function lastMsg(t){return t.messages&&t.messages.length?t.messages[t.messages.length-1]:null}
-function shareStatus(t){
-  const m=state.meetings.find(x=>x.party===t.startupId&&(x.status==="accepted"||x.status==="completed"));
-  if(m)return{label:"Meeting",cls:"green"};
-  if(t.messages&&t.messages.some(x=>x.from==="partner"))return{label:"Viewed",cls:"acc"};
-  return{label:"Shared",cls:"slate"};
 }
 function openPartnerThread(id){openThreadId=id;const t=state.partnerThreads.find(x=>x.id===id);if(t){t.unread=false;save()}go("partners")}
 function closePartnerThread(){openThreadId=null;go("partners")}
@@ -2214,7 +2069,7 @@ function deckEditModal(){
   <label class="f">Deck file</label>
   <div class="deRow"><input type="file" id="deFile" accept=".pdf,.ppt,.pptx,.key" onchange="deckFilePicked(this)">
   <span class="dim ellip" id="deFileName">${d.file?esc(d.file):"No file attached yet"}</span></div>
-  <div class="note" style="margin-top:10px">Currently v${state.me.deckVersion||1} · updated ${ago(state.me.deckUpdatedAt||Date.now())}. This working model records the file name and bumps the version — the file itself isn't uploaded in the prototype.</div>
+  <div class="note" style="margin-top:10px">Currently v${state.me.deckVersion||1} · updated ${ago(state.me.deckUpdatedAt||Date.now())}. File selection records the deck details in your profile; file hosting is not enabled yet.</div>
   <div class="actions" style="margin-top:16px">
     <button class="btn sm navy" onclick="saveDeckEdit()">Save changes</button>
     <button class="btn sm ghost" onclick="previewDeckDraft()">Preview</button>
@@ -2360,7 +2215,7 @@ function deckForward(){
     }else{
       d.forwardState="sent";d.forwarded=true;
       if(btn){btn.classList.remove("sending");btn.classList.add("sent");btn.textContent="✓ Deck forwarded"}
-      if(st){st.className="deck-status ok";st.textContent="Forwarded to a partner — the founder sees this in analytics."}
+      if(st){st.className="deck-status ok";st.textContent="Shared with a partner — the founder sees this in analytics."}
       setTimeout(()=>{
         if(window._deck!==d)return;
         d.forwardState="idle";
@@ -2383,7 +2238,7 @@ function closeDeck(id){
 }
 function previewOwnDeck(){deckModal("me")}
 function exportData(){try{const b=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="vcsure-data-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}catch(e){console.warn(e)}}
-function resetAll(){if(confirm("Reset all demo data?")){localStorage.removeItem(KEY);location.reload();}}
+function resetAll(){if(confirm("Clear locally stored VCSure data on this device?")){localStorage.removeItem(KEY);location.reload();}}
 
 /* ================= modal utils ================= */
 let _lastFocus=null;
@@ -2398,9 +2253,7 @@ document.addEventListener("keydown",e=>{
 
 /* boot */
 load();checkExpiries();render();
-initAuth().then(()=>{
-  (state.meetings||[]).filter(m=>m.status==="requested"&&m.direction==="out"&&Date.now()-m.ts>2500&&Date.now()<m.expiresAt).forEach((m,i)=>setTimeout(()=>respond(m.id,autoReply(m)),800+i*600));
-});
+initAuth();
 if(sb){
   sb.auth.onAuthStateChange((event,session)=>{
     setTimeout(async()=>{
