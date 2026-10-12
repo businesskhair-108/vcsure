@@ -1116,50 +1116,61 @@ async function doEmailAuth(){
   finally{authBusy=false;const b=$("#authSubmit");if(b){b.disabled=false;b.textContent=authMode==="signup"?"Create account":"Sign in";}}
 }
 let acceptingAuthUserId=null;
-let acceptingAuthPromise=null;
+function normalizeProfileState(){
+  if(!state.me || typeof state.me!=="object") state.me={};
+  Object.assign(state.me,{
+    name:state.me.name||"", startup:state.me.startup||"", sector:state.me.sector||"SaaS",
+    stage:state.me.stage||"Pre-seed", raising:Number.isFinite(Number(state.me.raising))?Number(state.me.raising):2,
+    traction:state.me.traction||"", deckTitle:state.me.deckTitle||"", deckVersion:Number(state.me.deckVersion)||1,
+    deckUpdatedAt:Number(state.me.deckUpdatedAt)||Date.now(), deckFile:state.me.deckFile||"",
+    deckHistory:Array.isArray(state.me.deckHistory)?state.me.deckHistory:[],
+    geography:state.me.geography||"", businessModel:state.me.businessModel||""
+  });
+  if(!state.vcMe || typeof state.vcMe!=="object") state.vcMe={};
+  Object.assign(state.vcMe,{
+    name:state.vcMe.name||"", type:state.vcMe.type||"Micro-VC", city:state.vcMe.city||"India",
+    sectors:Array.isArray(state.vcMe.sectors)&&state.vcMe.sectors.length?state.vcMe.sectors:["SaaS"],
+    stages:Array.isArray(state.vcMe.stages)&&state.vcMe.stages.length?state.vcMe.stages:["Pre-seed"],
+    cheque:Array.isArray(state.vcMe.cheque)&&state.vcMe.cheque.length>=2?state.vcMe.cheque:[1,4],
+    thesisNote:state.vcMe.thesisNote||"", thesisUpdatedAt:Number(state.vcMe.thesisUpdatedAt)||Date.now()
+  });
+}
 async function acceptAuthenticatedUser(user,session){
   if(!user)return;
-  /* Supabase can report the same OAuth session through getSession() and
-     onAuthStateChange(). Share the in-flight work instead of letting a second
-     callback race the first and leave the public landing page rendered. */
-  if(acceptingAuthUserId===user.id && acceptingAuthPromise){
-    await acceptingAuthPromise;
-    return;
-  }
-  if(state.authed&&state.auth?.id===user.id&&state.role){
-    view="home";
-    render();
-    return;
-  }
+  if(acceptingAuthUserId===user.id)return;
+  if(state.authed&&state.auth?.id===user.id&&state.role){normalizeProfileState();render();return;}
   acceptingAuthUserId=user.id;
-  acceptingAuthPromise=(async()=>{
-  const meta=user.user_metadata||{};
-  const isSameUser=state.auth&&state.auth.id===user.id;
-  /* Never carry another account's local profile into a newly authenticated account. */
-  if(!isSameUser){
-    state.me={name:"",startup:"",sector:"SaaS",stage:"Pre-seed",raising:2,traction:"",deckTitle:"",deckVersion:1,deckUpdatedAt:Date.now(),deckFile:"",deckHistory:[]};
-    state.vcMe={name:"",type:"Micro-VC",city:"",sectors:["SaaS"],stages:["Pre-seed"],cheque:[1,4],thesisNote:"",thesisUpdatedAt:Date.now()};
-    state.role=null;
-  }
-  state.authed=true;
-  state.auth={name:meta.full_name||meta.name||user.email?.split("@")[0]||"User",email:user.email||"",id:user.id,provider:(user.app_metadata&&user.app_metadata.provider)||"email"};
-  let pendingRole=null;try{pendingRole=localStorage.getItem("vcsure_pending_role");localStorage.removeItem("vcsure_pending_role");}catch(_){}
-  const role=await loadProfileForUser(user);
-  if(!role){state.role=pendingRole||meta.role||window._prefRole||null;}
-  if(state.role&&state.role!=="founder"&&state.role!=="vc")state.role=null;
-  save();closeModal();authBusy=false;
-  if(!state.role)roleModal();
-  else if(!onboarded())onboardModal();
-  else{go("home");}
-  /* Explicitly select the portal's overview after a successful sign-in. */
-  view="home";
-  render();
-  })();
   try{
-    await acceptingAuthPromise;
+    const meta=user.user_metadata||{};
+    const isSameUser=state.auth&&state.auth.id===user.id;
+    /* Keep accounts isolated; normalize both role profiles before any portal/modal uses them. */
+    if(!isSameUser){
+      state.me={name:"",startup:"",sector:"SaaS",stage:"Pre-seed",raising:2,traction:"",deckTitle:"",deckVersion:1,deckUpdatedAt:Date.now(),deckFile:"",deckHistory:[]};
+      state.vcMe={name:"",type:"Micro-VC",city:"India",sectors:["SaaS"],stages:["Pre-seed"],cheque:[1,4],thesisNote:"",thesisUpdatedAt:Date.now()};
+      state.role=null;
+    }
+    state.authed=true;
+    state.auth={name:meta.full_name||meta.name||user.email?.split("@")[0]||"User",email:user.email||"",id:user.id,provider:(user.app_metadata&&user.app_metadata.provider)||"email"};
+    normalizeProfileState();
+    let pendingRole=null;
+    try{pendingRole=localStorage.getItem("vcsure_pending_role");localStorage.removeItem("vcsure_pending_role");}catch(_){}
+    let role=null;
+    try{role=await loadProfileForUser(user);}catch(err){console.error("VCSure profile restore failed",err);}
+    normalizeProfileState();
+    if(!role)state.role=pendingRole||meta.role||window._prefRole||state.role||null;
+    if(state.role!=="founder"&&state.role!=="vc")state.role=null;
+    save();closeModal();authBusy=false;
+    if(!state.role){roleModal();}
+    else if(!onboarded()){onboardModal();}
+    else{go("home");}
+    render();
+  }catch(err){
+    console.error("VCSure startup after login failed",err);
+    /* Fail visibly into the role flow instead of leaving a blank page. */
+    try{normalizeProfileState();authBusy=false;closeModal();if(!state.role)roleModal();else onboardModal();render();}
+    catch(recoveryErr){console.error("VCSure recovery screen failed",recoveryErr);}
   }finally{
     acceptingAuthUserId=null;
-    acceptingAuthPromise=null;
   }
 }
 async function loadProfileForUser(user){
@@ -2277,7 +2288,7 @@ document.addEventListener("keydown",e=>{
 });
 
 /* boot */
-load();checkExpiries();render();
+load();normalizeProfileState();checkExpiries();render();
 initAuth();
 if(sb){
   sb.auth.onAuthStateChange((event,session)=>{
