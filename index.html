@@ -574,6 +574,32 @@ label.f{display:block;font-size:12px;font-weight:700;color:var(--ink-dim);margin
 /* Clean, full-page onboarding */
 .entry-wrap{min-height:72vh;max-width:1060px;margin:0 auto;padding:28px 22px 64px}.entry-top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:52px}.entry-panel{max-width:650px;margin:0 auto;background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:clamp(22px,5vw,48px);box-shadow:0 18px 60px rgba(10,25,45,.07)}.entry-title{font-size:clamp(30px,5vw,44px);line-height:1.08;letter-spacing:-.04em;margin:12px 0}.entry-copy{color:var(--ink-muted,var(--ink-faint));font-size:16px;line-height:1.65;max-width:52ch;margin:0 0 26px}.entry-roles{display:grid;gap:14px}.entry-role{width:100%;display:flex;align-items:center;gap:16px;text-align:left;padding:20px;border:1px solid var(--border);border-radius:16px;background:var(--surface);color:var(--ink);cursor:pointer;transition:border-color .18s,transform .18s}.entry-role:hover{border-color:var(--navy);transform:translateY(-1px)}.entry-role>span:nth-child(2){display:grid;gap:6px;flex:1}.entry-role b{font-size:17px}.entry-role small{font-size:13px;line-height:1.5;color:var(--ink-faint)}.entry-icon{width:44px;height:44px;display:grid;place-items:center;border-radius:12px;background:var(--gold-soft);font-size:24px;color:var(--navy);flex-shrink:0}.entry-arrow{font-size:22px}.entry-foot{font-size:12px;line-height:1.6;color:var(--ink-faint);margin:22px 0 0}.auth-panel{max-width:510px}.entry-google{width:100%;justify-content:center;margin:8px 0 18px;padding:13px}.entry-divider{display:flex;align-items:center;gap:12px;color:var(--ink-faint);font-size:12px;margin:14px 0}.entry-divider span{height:1px;flex:1;background:var(--border)}.entry-submit{width:100%;margin-top:14px;padding:13px}.auth-panel .gother{width:100%;margin-top:12px}.auth-panel .formStatus{margin-top:12px}@media(max-width:600px){.entry-wrap{padding:18px 14px 42px}.entry-top{margin-bottom:28px}.entry-panel{border-radius:18px}.entry-role{padding:16px;gap:12px}.entry-icon{width:38px;height:38px}}
 
+
+/* Clear, intentional portal switching and a branded workspace transition */
+.portal-switch-btn{white-space:nowrap;min-width:max-content}
+.portal-choice-modal{max-width:520px!important}
+.portal-choice-head{display:flex;gap:13px;align-items:center;margin-bottom:22px}
+.portal-choice-mark{width:48px;height:48px;flex:0 0 48px;display:grid;place-items:center;border-radius:15px;background:linear-gradient(145deg,var(--accent),var(--navy));color:#fff;font-weight:800;letter-spacing:-1px;box-shadow:0 8px 20px rgba(14,116,144,.18)}
+.portal-choice-list{display:grid;gap:10px}
+.portal-choice{width:100%;display:flex;align-items:center;gap:13px;text-align:left;padding:15px;border:1px solid var(--border);border-radius:14px;background:var(--surface);color:var(--ink);transition:border-color .18s,transform .18s,box-shadow .18s}
+.portal-choice:active{transform:scale(.99)}
+.portal-choice:hover{border-color:rgba(14,116,144,.42);box-shadow:0 8px 22px rgba(28,43,51,.06)}
+.portal-choice.is-current{background:var(--accent-soft);border-color:rgba(14,116,144,.3)}
+.portal-choice-icon{width:40px;height:40px;flex:0 0 40px;display:grid;place-items:center;border-radius:12px;background:var(--surface-2);color:var(--accent-ink);font-size:24px;font-weight:700}
+.portal-choice-copy{display:grid;gap:3px;flex:1;min-width:0}.portal-choice-copy b{font-size:14px}.portal-choice-copy small{font-size:12px;line-height:1.4;color:var(--ink-dim)}
+.portal-choice-arrow{font-size:12px;color:var(--accent-ink);font-weight:700;white-space:nowrap}
+.portal-choice-foot{margin-top:15px;color:var(--ink-faint);font-size:12px}
+.portal-transition{position:fixed;z-index:99999;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(250,248,244,.97);backdrop-filter:blur(12px);opacity:1;transition:opacity .22s ease}
+.portal-transition.is-leaving{opacity:0;pointer-events:none}
+.transition-orbit{position:relative;width:112px;height:112px;display:grid;place-items:center;margin-bottom:12px}
+.transition-logo{width:64px;height:64px;border-radius:21px;display:grid;place-items:center;color:white;font-size:20px;font-weight:800;letter-spacing:-1px;background:linear-gradient(145deg,var(--accent),var(--navy));box-shadow:0 12px 30px rgba(14,116,144,.25);animation:logoBreath 1.4s ease-in-out infinite}
+.orbit-dot{position:absolute;width:10px;height:10px;border-radius:50%;background:var(--gold);left:51px;top:2px;transform-origin:5px 54px;animation:orbitSpin 1.4s linear infinite}
+.dot-two{background:var(--accent);width:7px;height:7px;animation-duration:1.9s;animation-direction:reverse}.dot-three{background:var(--navy);width:6px;height:6px;animation-duration:2.3s}
+.transition-title{font-size:17px;font-weight:800;letter-spacing:-.4px;text-align:center;padding:0 20px}.transition-subtitle{font-size:13px;color:var(--ink-dim)}
+.transition-progress{width:150px;height:3px;border-radius:99px;background:rgba(14,116,144,.12);overflow:hidden;margin-top:8px}.transition-progress span{display:block;width:35%;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--gold));animation:progressGlide .9s ease-in-out infinite alternate}
+@keyframes orbitSpin{to{transform:rotate(360deg)}}@keyframes logoBreath{0%,100%{transform:scale(1);box-shadow:0 12px 30px rgba(14,116,144,.2)}50%{transform:scale(1.055);box-shadow:0 16px 36px rgba(14,116,144,.3)}}@keyframes progressGlide{from{transform:translateX(-30%)}to{transform:translateX(240%)}}
+@media(prefers-reduced-motion:reduce){.transition-logo,.orbit-dot,.transition-progress span{animation:none!important}.portal-choice{transition:none}}
+
 </style>
 </head>
 <body>
@@ -849,7 +875,7 @@ function drawNav(){
     ${pend?`<button class="nav-tab" onclick="go('meetings')" style="color:var(--red)">${pend} new</button>`:""}</div>
     <div class="acct"><div class="who"><b>${esc(state.auth.name)}</b><span>${isF?esc(state.me.startup||""):esc(state.vcMe.name||"")}</span></div>
     <div class="gavatar">${initials(state.auth.name||"W")}</div>
-    ${`<button class="linkout" onclick="switchPortal()" aria-label="Switch portal">${state.role==="founder"?"Investor ↔":"Founder ↔"}</button>`}
+    <button class="linkout portal-switch-btn" onclick="switchPortal()" aria-label="Choose portal"><span class="dm">Switch portal</span><span class="mm">Switch ↔</span></button>
     <button class="linkout askbtn" onclick="openAssistant()" aria-label="Help"><span class="dm">Help</span><span class="mm">Ask</span></button>
     </div></div></nav>
     <div class="bottomNav">
@@ -1186,12 +1212,27 @@ async function loadProfileForUser(user,preferredRole){
 }
 function switchPortal(){
   if(!state.authed||!state.role)return;
-  const next=state.role==="founder"?"vc":"founder";
-  state.role=next;view="home";pTab="overview";closeModal();
+  const hasFounder=(state.availableRoles||[]).includes("founder")||!!state.me.startup;
+  const hasVC=(state.availableRoles||[]).includes("vc")||!!state.vcMe.name;
+  const current=state.role;
+  modal(`<div class="portal-choice-head"><div class="portal-choice-mark">VS</div><div><h2 style="margin-bottom:4px">Switch workspace</h2><p class="dim" style="font-size:13px">Choose where you want to work. Your other profile stays separate.</p></div></div>
+    <div class="portal-choice-list">
+      <button class="portal-choice ${current==="founder"?"is-current":""}" onclick="selectPortal('founder')"><span class="portal-choice-icon">↗</span><span class="portal-choice-copy"><b>Founder workspace</b><small>Find investors and manage introductions</small></span><span class="portal-choice-arrow">${current==="founder"?"Current":"→"}</span></button>
+      <button class="portal-choice ${current==="vc"?"is-current":""}" onclick="selectPortal('vc')"><span class="portal-choice-icon">◇</span><span class="portal-choice-copy"><b>Investor workspace</b><small>Discover startups and manage deal flow</small></span><span class="portal-choice-arrow">${current==="vc"?"Current":"→"}</span></button>
+    </div><p class="portal-choice-foot">${(!hasFounder||!hasVC)?"You can set up the other workspace when you choose it.":"Your startup and fund profiles remain separate."}</p>`,"portal-choice-modal");
+}
+function selectPortal(next){
+  if(!state.authed||!['founder','vc'].includes(next))return;
+  closeModal();
+  if(next===state.role){return;}
+  state.role=next;view="home";pTab="overview";
   try{localStorage.setItem("vcsure_last_role_"+state.auth.id,next);}catch(_){}
   save();
-  if(!onboarded()){render();onboardModal();return;}
-  render();
+  const root=document.body;
+  const old=document.getElementById("portalTransition");if(old)old.remove();
+  root.insertAdjacentHTML("beforeend",`<div id="portalTransition" class="portal-transition" role="status" aria-live="polite"><div class="transition-orbit"><span class="orbit-dot dot-one"></span><span class="orbit-dot dot-two"></span><span class="orbit-dot dot-three"></span><div class="transition-logo">VS</div></div><div class="transition-title">Preparing your ${next==='founder'?'Founder':'Investor'} workspace</div><div class="transition-subtitle">Getting your dashboard ready</div><div class="transition-progress"><span></span></div></div>`);
+  const finish=()=>{const el=document.getElementById("portalTransition");if(el)el.classList.add("is-leaving");setTimeout(()=>{const e=document.getElementById("portalTransition");if(e)e.remove();if(!onboarded()){render();onboardModal();return;}render();},220);};
+  setTimeout(finish,850);
 }
 async function persistCurrentProfile(){
   if(!sb||!state.authed||!state.auth?.id||!state.role)return false;
