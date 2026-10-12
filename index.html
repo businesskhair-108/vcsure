@@ -656,17 +656,26 @@ function seed(){
   };
 }
 let state;
-function load(){try{state=JSON.parse(localStorage.getItem(KEY))||null}catch(e){state=null}if(!state||!state.vcs)state=seed();
-  /* migration: enforce cheque-spread cap on pre-existing data */
-  if(state.vcMe&&state.vcMe.cheque&&state.vcMe.cheque[0]>0&&state.vcMe.cheque[1]>state.vcMe.cheque[0]*CHEQUE_SPREAD_CAP){
+function load(){
+  try{state=JSON.parse(localStorage.getItem(KEY))||null}catch(e){state=null}
+  if(!state||!state.vcs)state=seed();
+  /* Migrate older/incomplete browser state before renderers read nested fields. */
+  const defaults=seed();
+  state.auth={...defaults.auth,...(state.auth||{})};
+  state.me={...defaults.me,...(state.me||{})};
+  state.vcMe={...defaults.vcMe,...(state.vcMe||{})};
+  state.role=(state.role==="founder"||state.role==="vc")?state.role:null;
+  for(const k of ["startups","vcs","savedVCs","savedStartups","meetings","deckViews","unlocked","deckShares","partners","partnerThreads"]){
+    if(!Array.isArray(state[k]))state[k]=Array.isArray(defaults[k])?defaults[k]:[];
+  }
+  if(!state.pipeline||typeof state.pipeline!=="object")state.pipeline={};
+  if(state.vcMe.cheque&&state.vcMe.cheque[0]>0&&state.vcMe.cheque[1]>state.vcMe.cheque[0]*CHEQUE_SPREAD_CAP){
     state.vcMe.cheque=[state.vcMe.cheque[0],+(state.vcMe.cheque[0]*CHEQUE_SPREAD_CAP).toFixed(2)];
   }
   delete state.pro;
   if(!state.tour)state.tour={founder:false,vc:false};
-  if(!state.deckShares)state.deckShares=[];
   if(typeof state.credits!=="number")state.credits=0;
-  if(!state.partners)state.partners=[{id:"p1",name:"Sarah Menon",role:"Partner"},{id:"p2",name:"Rahul Iyer",role:"Principal"},{id:"p3",name:"Aisha Khan",role:"Associate"}];
-  if(!state.partnerThreads)state.partnerThreads=[];
+  if(!state.partners.length)state.partners=[{id:"p1",name:"Sarah Menon",role:"Partner"},{id:"p2",name:"Rahul Iyer",role:"Principal"},{id:"p3",name:"Aisha Khan",role:"Associate"}];
   if(!state.me.deckVersion){state.me.deckVersion=1;state.me.deckUpdatedAt=state.me.deckUpdatedAt||Date.now();state.me.deckFile=state.me.deckFile||"";state.me.deckHistory=state.me.deckHistory||[]}
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));return true}catch(e){console.warn("VC Sure: could not save",e);const b=document.getElementById("saveWarn");if(b)b.hidden=false;return false}}
@@ -772,22 +781,28 @@ function shareDeckWithVC(startupId){
 let pTab="overview";
 let entryScreen="landing"; // show the main landing page first; role selection precedes authentication
 function render(){
-  if(view==="decks"){view="profile";pTab="deck"}else if(view==="perks"){view="profile";pTab="overview"}
-  if(state&&state.role==="vc"&&view==="decks")view="home";
-  drawNav();drawFooter();drawDeckNotif();
-  const v=$("#viewRoot");
-  v.classList.toggle("portal-content",!!(state.authed&&state.role));
-  if(!state.authed){v.innerHTML=entryScreen==="auth"?authPageHTML():entryScreen==="role"?roleChoicePageHTML():landingHTML();return;}
-  if(!state.role){v.innerHTML="";roleModal();return;}
-  if(view==="welcome")view="home";
-  checkExpiries();
-  if(view==="home")v.innerHTML=homeHTML();
-  else if(view==="discover")v.innerHTML=discoverHTML();
-  else if(view==="saved")v.innerHTML=savedHTML();
-  else if(view==="meetings")v.innerHTML=meetingsHTML();
-  else if(view==="messages")v.innerHTML=messagesHTML();
-  else if(view==="partners")v.innerHTML=partnersHTML();
-  else if(view==="profile")v.innerHTML=profileTabsHTML();
+  try{
+    if(view==="decks"){view="profile";pTab="deck"}else if(view==="perks"){view="profile";pTab="overview"}
+    if(state&&state.role==="vc"&&view==="decks")view="home";
+    drawNav();drawFooter();drawDeckNotif();
+    const v=$("#viewRoot");if(!v)return;
+    v.classList.toggle("portal-content",!!(state.authed&&state.role));
+    if(!state.authed){v.innerHTML=entryScreen==="auth"?authPageHTML():entryScreen==="role"?roleChoicePageHTML():landingHTML();return;}
+    if(!state.role){v.innerHTML="";roleModal();return;}
+    if(view==="welcome")view="home";
+    checkExpiries();
+    if(view==="home")v.innerHTML=homeHTML();
+    else if(view==="discover")v.innerHTML=discoverHTML();
+    else if(view==="saved")v.innerHTML=savedHTML();
+    else if(view==="meetings")v.innerHTML=meetingsHTML();
+    else if(view==="messages")v.innerHTML=messagesHTML();
+    else if(view==="partners")v.innerHTML=partnersHTML();
+    else if(view==="profile")v.innerHTML=profileTabsHTML();
+  }catch(err){
+    console.error("VCSure render failed",err);
+    const v=$("#viewRoot");
+    if(v){v.classList.remove("portal-content");v.innerHTML=`<section style="max-width:640px;margin:40px auto;padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:16px"><h2>VCSure couldn't display this screen</h2><p class="dim">Your saved account hasn't been deleted. Try reloading the portal, or sign out and sign in again.</p><button class="btn" onclick="location.reload()">Reload VCSure</button><button class="btn ghost" style="margin-left:8px" onclick="signOut()">Sign out</button></section>`;}
+  }
 }
 const ICONS={
 home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>',
@@ -1116,61 +1131,50 @@ async function doEmailAuth(){
   finally{authBusy=false;const b=$("#authSubmit");if(b){b.disabled=false;b.textContent=authMode==="signup"?"Create account":"Sign in";}}
 }
 let acceptingAuthUserId=null;
-function normalizeProfileState(){
-  if(!state.me || typeof state.me!=="object") state.me={};
-  Object.assign(state.me,{
-    name:state.me.name||"", startup:state.me.startup||"", sector:state.me.sector||"SaaS",
-    stage:state.me.stage||"Pre-seed", raising:Number.isFinite(Number(state.me.raising))?Number(state.me.raising):2,
-    traction:state.me.traction||"", deckTitle:state.me.deckTitle||"", deckVersion:Number(state.me.deckVersion)||1,
-    deckUpdatedAt:Number(state.me.deckUpdatedAt)||Date.now(), deckFile:state.me.deckFile||"",
-    deckHistory:Array.isArray(state.me.deckHistory)?state.me.deckHistory:[],
-    geography:state.me.geography||"", businessModel:state.me.businessModel||""
-  });
-  if(!state.vcMe || typeof state.vcMe!=="object") state.vcMe={};
-  Object.assign(state.vcMe,{
-    name:state.vcMe.name||"", type:state.vcMe.type||"Micro-VC", city:state.vcMe.city||"India",
-    sectors:Array.isArray(state.vcMe.sectors)&&state.vcMe.sectors.length?state.vcMe.sectors:["SaaS"],
-    stages:Array.isArray(state.vcMe.stages)&&state.vcMe.stages.length?state.vcMe.stages:["Pre-seed"],
-    cheque:Array.isArray(state.vcMe.cheque)&&state.vcMe.cheque.length>=2?state.vcMe.cheque:[1,4],
-    thesisNote:state.vcMe.thesisNote||"", thesisUpdatedAt:Number(state.vcMe.thesisUpdatedAt)||Date.now()
-  });
-}
 async function acceptAuthenticatedUser(user,session){
   if(!user)return;
+  /* Prevent concurrent restoration, but don't trust a persisted local role as proof
+     that this user's Supabase profile and portal are ready. */
   if(acceptingAuthUserId===user.id)return;
-  if(state.authed&&state.auth?.id===user.id&&state.role){normalizeProfileState();render();return;}
   acceptingAuthUserId=user.id;
   try{
     const meta=user.user_metadata||{};
     const isSameUser=state.auth&&state.auth.id===user.id;
-    /* Keep accounts isolated; normalize both role profiles before any portal/modal uses them. */
     if(!isSameUser){
       state.me={name:"",startup:"",sector:"SaaS",stage:"Pre-seed",raising:2,traction:"",deckTitle:"",deckVersion:1,deckUpdatedAt:Date.now(),deckFile:"",deckHistory:[]};
-      state.vcMe={name:"",type:"Micro-VC",city:"India",sectors:["SaaS"],stages:["Pre-seed"],cheque:[1,4],thesisNote:"",thesisUpdatedAt:Date.now()};
+      state.vcMe={name:"",type:"Micro-VC",city:"",sectors:["SaaS"],stages:["Pre-seed"],cheque:[1,4],thesisNote:"",thesisUpdatedAt:Date.now()};
       state.role=null;
     }
     state.authed=true;
     state.auth={name:meta.full_name||meta.name||user.email?.split("@")[0]||"User",email:user.email||"",id:user.id,provider:(user.app_metadata&&user.app_metadata.provider)||"email"};
-    normalizeProfileState();
     let pendingRole=null;
     try{pendingRole=localStorage.getItem("vcsure_pending_role");localStorage.removeItem("vcsure_pending_role");}catch(_){}
-    let role=null;
-    try{role=await loadProfileForUser(user);}catch(err){console.error("VCSure profile restore failed",err);}
-    normalizeProfileState();
-    if(!role)state.role=pendingRole||meta.role||window._prefRole||state.role||null;
+    /* Always restore profile before routing a returning user to a portal. */
+    const role=await loadProfileForUser(user);
+    if(!role){
+      const candidate=pendingRole||meta.role||window._prefRole||state.role||null;
+      state.role=(candidate==="founder"||candidate==="vc")?candidate:null;
+    }
     if(state.role!=="founder"&&state.role!=="vc")state.role=null;
     save();closeModal();authBusy=false;
-    if(!state.role){roleModal();}
-    else if(!onboarded()){onboardModal();}
-    else{go("home");}
-    render();
+    if(!state.role){view="welcome";render();roleModal();return;}
+    if(!onboarded()){view="welcome";render();onboardModal();return;}
+    view="home";render();
   }catch(err){
-    console.error("VCSure startup after login failed",err);
-    /* Fail visibly into the role flow instead of leaving a blank page. */
-    try{normalizeProfileState();authBusy=false;closeModal();if(!state.role)roleModal();else onboardModal();render();}
-    catch(recoveryErr){console.error("VCSure recovery screen failed",recoveryErr);}
-  }finally{
-    acceptingAuthUserId=null;
+    console.error("VCSure login/portal restoration failed",err);
+    authBusy=false;
+    const root=$("#viewRoot");
+    if(root){root.classList.remove("portal-content");root.innerHTML=`<section style="max-width:640px;margin:40px auto;padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:16px"><h2>We couldn't open your portal</h2><p class="dim">Your sign-in may have succeeded, but VCSure couldn't restore your profile. Try again, or sign out and sign in again.</p><button class="btn" onclick="retryPortalRestore()">Try again</button><button class="btn ghost" style="margin-left:8px" onclick="signOut()">Sign out</button></section>`;}
+  }finally{acceptingAuthUserId=null;}
+}
+async function retryPortalRestore(){
+  try{
+    const {data,error}=await sb.auth.getSession();if(error)throw error;
+    if(data.session?.user){await acceptAuthenticatedUser(data.session.user,data.session);return;}
+    state.authed=false;state.role=null;entryScreen="landing";render();
+  }catch(err){
+    console.error("VCSure portal retry failed",err);
+    const root=$("#viewRoot");if(root)root.innerHTML=`<section style="max-width:640px;margin:40px auto;padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:16px"><h2>Still unable to open the portal</h2><p class="dim">Check your connection and try again. Your account data has not been intentionally deleted.</p><button class="btn" onclick="retryPortalRestore()">Retry</button></section>`;
   }
 }
 async function loadProfileForUser(user){
@@ -2288,7 +2292,7 @@ document.addEventListener("keydown",e=>{
 });
 
 /* boot */
-load();normalizeProfileState();checkExpiries();render();
+load();checkExpiries();render();
 initAuth();
 if(sb){
   sb.auth.onAuthStateChange((event,session)=>{
