@@ -5,7 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VC Sure — Where startups meet the right VCs</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800&family=Instrument+Serif:ital@0;1&family=Azeret+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+
+</script>
+<script>
+/* VCSure currently uses the original light theme. Dark mode is paused. */
+document.documentElement.dataset.theme="light";
+try { localStorage.removeItem("vcsure_theme"); } catch (_) {}
+function toggleVCSureTheme(){ document.documentElement.dataset.theme="light"; }
+window.vcsThemeToggleHTML = function vcsThemeToggleHTML(){ return ""; };
+</script>
+
 <style>
 :root{
   --bg:#faf8f4; --surface:#ffffff; --surface-2:#f5f3ee; --border:rgba(28,43,51,.1);
@@ -70,7 +80,7 @@ a{color:var(--accent-ink)}
 .dd-opt:hover{background:var(--surface-2)}
 .dd-opt.sel{background:var(--accent-soft);color:var(--accent-ink);font-weight:700}
 @media(max-width:700px){.dd-btn{font-size:14px}}
-.asst{position:fixed;right:20px;bottom:20px;z-index:90;width:380px;max-width:calc(100vw - 24px);height:min(560px,calc(100vh - 40px));display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 30px 60px -24px rgba(28,43,51,.35);overflow:hidden;animation:popIn .18s}
+.asst-backdrop{display:none}.asst{position:fixed;right:20px;bottom:20px;z-index:90;width:380px;max-width:calc(100vw - 24px);height:min(560px,calc(100vh - 40px));display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 30px 60px -24px rgba(28,43,51,.35);overflow:hidden;animation:popIn .18s}
 .asstHead{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--accent-soft);border-bottom:1px solid rgba(14,116,144,.2)}
 .asstHead .logo-mark{width:30px;height:30px;font-size:11px;flex-shrink:0}
 .asstT{flex:1;min-width:0}.asstT b{display:block;font-size:14px}.asstT span{display:block;font-size:11.5px;color:var(--ink-dim)}
@@ -548,6 +558,18 @@ label.f{display:block;font-size:12px;font-weight:700;color:var(--ink-dim);margin
   .minilinks{gap:16px}
 }
 
+
+/* Always-visible, unobtrusive Mitra help entry point */
+.mitra-launcher{position:fixed;right:18px;bottom:22px;z-index:70;display:flex;align-items:center;gap:10px;padding:9px 15px 9px 9px;border:1px solid rgba(14,116,144,.22);border-radius:999px;background:rgba(255,255,255,.97);color:var(--ink);box-shadow:0 8px 24px rgba(28,43,51,.14);text-align:left;cursor:pointer;transition:transform .16s,box-shadow .16s,border-color .16s}
+.mitra-launcher:hover{transform:translateY(-2px);border-color:rgba(14,116,144,.45);box-shadow:0 12px 28px rgba(28,43,51,.17)}
+.mitra-launcher-icon{width:36px;height:36px;display:grid;place-items:center;border-radius:50%;background:linear-gradient(145deg,var(--accent),var(--navy));color:#fff;font-size:20px;font-weight:700}
+.mitra-launcher span:last-child{display:grid;gap:1px}.mitra-launcher small{font-size:10.5px;color:var(--ink-faint);line-height:1.2}.mitra-launcher b{font-size:13px;line-height:1.2}
+@media(max-width:700px){.asst-backdrop{display:block;position:fixed;inset:0;z-index:89;background:rgba(18,31,39,.34);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);animation:fadeUp .16s ease}.asst{z-index:90;right:10px;left:10px;bottom:calc(82px + env(safe-area-inset-bottom));width:auto;max-width:none;height:min(72dvh,620px);border-radius:20px;box-shadow:0 24px 70px rgba(10,25,35,.25)}.asstHead{padding:12px 14px}.asstLog{min-height:0;overscroll-behavior:contain}.asstIn{padding-bottom:max(10px,env(safe-area-inset-bottom))}.mitra-launcher{right:12px;bottom:calc(84px + env(safe-area-inset-bottom));padding:7px 12px 7px 7px}.mitra-launcher-icon{width:32px;height:32px}.mitra-launcher small{display:none}.mitra-launcher b{font-size:12px}}
+
+
+.fit-explainer{margin-top:10px;min-width:0}.fit-label{display:block;font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--ink-faint);margin:0 0 6px}.hc .why{gap:6px}.hc .why .chip{white-space:normal;line-height:1.4;border-radius:10px;padding:6px 10px;font-size:11.5px;max-width:100%}.hc .meta-row .chip{white-space:normal;line-height:1.4}
+@media(min-width:901px){.hc .fit-explainer{grid-area:why;align-self:center;margin:0}.hc .fit-label{margin-bottom:5px}.hc .why{align-self:auto}}
+
 /* ===== Desktop Matches / Pipeline: ONE wide card per row, content flowing horizontally ===== */
 @media(min-width:701px){
   .grid.matchGrid{grid-template-columns:minmax(0,1fr);gap:10px}
@@ -599,6 +621,531 @@ label.f{display:block;font-size:12px;font-weight:700;color:var(--ink-dim);margin
 .transition-progress{width:150px;height:3px;border-radius:99px;background:rgba(14,116,144,.12);overflow:hidden;margin-top:8px}.transition-progress span{display:block;width:35%;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--gold));animation:progressGlide .9s ease-in-out infinite alternate}
 @keyframes orbitSpin{to{transform:rotate(360deg)}}@keyframes logoBreath{0%,100%{transform:scale(1);box-shadow:0 12px 30px rgba(14,116,144,.2)}50%{transform:scale(1.055);box-shadow:0 16px 36px rgba(14,116,144,.3)}}@keyframes progressGlide{from{transform:translateX(-30%)}to{transform:translateX(240%)}}
 @media(prefers-reduced-motion:reduce){.transition-logo,.orbit-dot,.transition-progress span{animation:none!important}.portal-choice{transition:none}}
+
+
+
+/* Brand-neutral loading animation: abstract stacked panels, no logo or product name */
+.portal-transition{gap:13px;background:rgba(250,248,244,.985);backdrop-filter:blur(16px)}
+.transition-orbit{width:148px;height:118px;position:relative;margin-bottom:4px;display:block}
+.transition-logo{display:none!important}
+.transition-orbit:before,.transition-orbit:after{content:"";position:absolute;width:72px;height:86px;left:38px;top:12px;border:1px solid rgba(14,116,144,.16);border-radius:18px;background:rgba(255,255,255,.76);box-shadow:0 12px 28px rgba(28,43,51,.05)}
+.transition-orbit:before{transform:translate(-17px,-8px) rotate(-12deg);animation:panelBack 1.8s ease-in-out infinite}
+.transition-orbit:after{transform:translate(15px,-3px) rotate(10deg);animation:panelFront 1.8s ease-in-out infinite}
+.orbit-dot{z-index:2;left:70px;top:1px;width:8px;height:8px;transform-origin:4px 58px;box-shadow:0 0 0 5px rgba(14,116,144,.08)}
+.dot-two{left:28px;top:80px;width:7px;height:7px}.dot-three{left:112px;top:82px;width:6px;height:6px}
+.transition-title{font-size:16px;font-weight:700;letter-spacing:-.25px;color:var(--ink);padding:0 22px}
+.transition-subtitle{font-size:13px;color:var(--ink-dim);text-align:center}
+.transition-progress{width:154px;height:4px;margin-top:7px;background:rgba(28,43,51,.08)}
+.transition-progress span{width:32%;background:linear-gradient(90deg,#287f88,#d0ad52);animation:progressGlide 1.1s cubic-bezier(.4,0,.2,1) infinite alternate}
+@keyframes panelBack{0%,100%{transform:translate(-17px,-8px) rotate(-12deg)}50%{transform:translate(-22px,-12px) rotate(-16deg)}}
+@keyframes panelFront{0%,100%{transform:translate(15px,-3px) rotate(10deg)}50%{transform:translate(20px,-7px) rotate(14deg)}}
+@media(prefers-reduced-motion:reduce){.transition-orbit:before,.transition-orbit:after,.orbit-dot,.transition-progress span{animation:none!important}}
+
+/* VCSure visual refinement: calmer hierarchy, spacious surfaces, clear workspace actions */
+:root{--radius:18px;--radius-s:12px}
+body{background-image:none;background-color:var(--bg)}
+.nav{background:rgba(250,248,244,.96);border-bottom-color:rgba(28,43,51,.075)}
+.nav-inner{gap:16px;padding-top:13px;padding-bottom:13px}
+.logo{gap:11px;letter-spacing:-.35px}
+.logo-mark{width:36px;height:36px;border-radius:12px;box-shadow:0 4px 12px rgba(30,58,95,.12)}
+.nav-tabs{gap:4px}
+.nav-tab{padding:9px 13px;border-radius:11px;font-size:13px;transition:background .16s,color .16s}
+.nav-tab.active{box-shadow:inset 0 0 0 1px rgba(14,116,144,.06)}
+.acct{gap:9px}
+.acct .who b{font-size:13.5px;letter-spacing:-.2px}
+.gavatar{width:36px;height:36px;box-shadow:0 0 0 3px rgba(14,116,144,.07)}
+.portal-switch-btn{display:inline-flex;align-items:center;gap:7px;background:#f0f1ee;border:1px solid rgba(28,43,51,.07);padding:9px 13px;border-radius:11px;color:var(--ink);font-size:12.5px;font-weight:700;transition:background .16s,border-color .16s,transform .16s}
+.portal-switch-btn:hover{background:#e8f2f2;border-color:rgba(14,116,144,.18);color:var(--accent-ink)}
+.portal-switch-btn .mm{display:none}
+.linkout.askbtn{padding:9px 11px;border-radius:11px}
+#viewRoot.portal-content{padding-top:30px}
+.card,.stat,.statstrip,.msgWS,.portal{border-color:rgba(28,43,51,.085);box-shadow:0 2px 10px rgba(28,43,51,.018)}
+.card{padding:21px;border-radius:18px}
+.card.hero{background:linear-gradient(135deg,#eaf4f4 0%,#fff 74%);border-color:rgba(14,116,144,.12)}
+.stat{padding:17px 18px;border-radius:14px}
+.statstrip{padding:18px 8px;border-radius:18px}
+.btn{border-radius:12px;padding:11px 17px;min-height:42px;letter-spacing:-.1px;box-shadow:0 1px 2px rgba(28,43,51,.04)}
+.btn:hover{box-shadow:0 5px 16px rgba(14,116,144,.16)}
+.btn.navy:hover{box-shadow:0 5px 16px rgba(30,58,95,.18)}
+input,select,textarea{border-radius:12px;padding:11px 13px}
+.section-label{letter-spacing:.09em;margin-bottom:12px}
+.overlay{background:rgba(20,31,39,.38);backdrop-filter:blur(5px);padding:18px}
+.modal{border-radius:24px;padding:clamp(22px,4vw,30px);box-shadow:0 28px 90px rgba(20,31,39,.18);border-color:rgba(28,43,51,.07)}
+.portal-choice-modal{max-width:490px!important}
+.portal-choice-head{gap:15px;margin-bottom:20px}
+.portal-choice-mark{width:46px;height:46px;flex-basis:46px;border-radius:14px;box-shadow:none}
+.portal-choice-list{gap:12px}
+.portal-choice{padding:17px 16px;border-radius:17px;gap:14px;border-color:rgba(28,43,51,.09);box-shadow:0 2px 8px rgba(28,43,51,.025)}
+.portal-choice:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(28,43,51,.07)}
+.portal-choice.is-current{background:#f0f7f6;border-color:rgba(14,116,144,.24);box-shadow:inset 3px 0 0 var(--accent)}
+.portal-choice-icon{width:44px;height:44px;flex-basis:44px;border-radius:13px;background:#f3f4f1;font-size:21px}
+.portal-choice-copy b{font-size:14.5px;letter-spacing:-.2px}
+.portal-choice-copy small{font-size:12.5px;line-height:1.5}
+.portal-choice-arrow{background:#f0f2ef;padding:7px 10px;border-radius:9px;color:var(--ink-dim)}
+.portal-choice.is-current .portal-choice-arrow{background:#e0efed;color:var(--accent-ink)}
+.portal-choice-foot{line-height:1.55;margin-top:17px;padding:0 2px}
+.portal-transition{background:rgba(250,248,244,.985)}
+.transition-orbit{width:120px;height:120px}
+.transition-logo{width:66px;height:66px;border-radius:20px}
+.transition-title{font-size:18px;letter-spacing:-.45px}
+.transition-subtitle{font-size:13.5px}
+.transition-progress{width:164px;height:4px}
+@media(max-width:700px){
+  .nav-inner{gap:10px;padding-top:10px;padding-bottom:10px}
+  .logo{font-size:16px;gap:8px}
+  .logo-mark{width:34px;height:34px;border-radius:11px}
+  .nav-tabs{order:3;flex:1 0 100%;padding-top:2px}
+  .nav-tab{padding:8px 10px;font-size:12.5px}
+  .acct{gap:6px}
+  .acct .who{display:none}
+  .gavatar{width:34px;height:34px}
+  .portal-switch-btn{padding:9px 10px;font-size:12px}
+  .portal-switch-btn .dm{display:none}
+  .portal-switch-btn .mm{display:inline}
+  .linkout.askbtn{padding:8px 9px}
+  #viewRoot.portal-content{padding-top:20px}
+  .card{padding:17px;border-radius:16px}
+  .statstrip{padding:14px 4px}
+  .statstrip .cell{padding:0 10px}
+  .modal{border-radius:22px;padding:22px 18px}
+  .portal-choice{padding:15px 13px;gap:11px}
+  .portal-choice-icon{width:40px;height:40px;flex-basis:40px}
+}
+@media(prefers-reduced-motion:reduce){.portal-choice:hover{transform:none}}
+
+
+
+/* Full-page profile editor and account safety */
+.settings-page{max-width:820px;margin:0 auto}.settings-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.back-profile{font-weight:700}.settings-heading{margin-bottom:22px}.settings-heading h2{margin:0 0 7px}.settings-heading p,.edit-help{color:var(--ink-dim);font-size:14px;line-height:1.6}.settings-form{display:grid;gap:16px}.edit-section{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:clamp(16px,3vw,24px);box-shadow:0 8px 24px rgba(28,43,51,.035)}.edit-section .section-label{margin-bottom:16px}.edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.edit-field{min-width:0}.edit-field.full{grid-column:1/-1}.edit-field .f{display:block;margin-bottom:7px;font-weight:700;font-size:13px}.edit-field input,.edit-field select,.edit-field textarea{min-height:44px}.edit-field small{display:block;color:var(--ink-faint);font-size:12px;margin-top:6px}.edit-help{margin:-8px 0 16px}.settings-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:4px 0 10px}.edit-save-note{font-size:12px;color:var(--ink-faint);margin-left:auto}.danger-zone{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:28px;padding:18px 20px;border:1px solid rgba(190,18,60,.22);border-radius:16px;background:rgba(251,232,236,.42)}.danger-zone b{color:var(--red)}.danger-zone p{font-size:12.5px;color:var(--ink-dim);margin-top:4px;max-width:52ch}.danger-btn{background:var(--red)!important;color:white!important;border:1px solid var(--red)!important}.danger-text{color:var(--red)!important}.profile-account-actions{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)}.delete-confirm-modal{max-width:500px!important}.delete-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:18px}.delete-head h2{margin:0 0 5px}.delete-icon{width:40px;height:40px;flex:0 0 40px;border-radius:12px;background:var(--red-soft);color:var(--red);display:grid;place-items:center;font-size:22px;font-weight:800}
+@media(max-width:600px){.edit-grid{grid-template-columns:1fr}.edit-field.full{grid-column:auto}.settings-actions .btn{flex:1}.edit-save-note{flex-basis:100%;margin:4px 0 0}.danger-zone{align-items:stretch;flex-direction:column}.danger-zone .btn{width:100%}.settings-heading h2{font-size:26px}}
+
+
+/* VCSure minimal three-sphere loader — single teal hue, dimensional shading */
+.portal-transition{
+  gap:14px;
+  background:rgba(250,248,244,.97);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+.transition-orbit{
+  width:126px;
+  height:66px;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  margin:0 0 3px;
+}
+.transition-orbit:before,
+.transition-orbit:after{content:none!important;display:none!important}
+.orbit-dot{
+  position:relative;
+  inset:auto;
+  display:block;
+  flex:0 0 18px;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:#167d83;
+  box-shadow:none;
+  animation:sphereThink 1.05s ease-in-out infinite;
+  transform:translateY(0) scale(.92);
+}
+.orbit-dot.dot-one{animation-delay:0s}
+.orbit-dot.dot-two{animation-delay:.14s}
+.orbit-dot.dot-three{animation-delay:.28s}
+.transition-title{
+  font-size:14px;
+  font-weight:600;
+  letter-spacing:.01em;
+  color:#64747a;
+  animation:thinkingText 1.7s ease-in-out infinite;
+}
+.transition-subtitle,.transition-progress{display:none!important}
+@keyframes sphereThink{
+  0%,60%,100%{transform:translateY(5px) scale(.88);filter:brightness(.88)}
+  30%{transform:translateY(-9px) scale(1.04);filter:brightness(1.12)}
+}
+@keyframes thinkingText{
+  0%,100%{opacity:.48}
+  50%{opacity:1}
+}
+@media(prefers-reduced-motion:reduce){
+  .orbit-dot,.transition-title{animation:none!important}
+  .orbit-dot{transform:none!important}
+}
+
+
+/* Smooth, restrained interaction language */
+:root{
+  --motion-fast:150ms;
+  --motion-normal:220ms;
+  --motion-slow:320ms;
+  --ease-ui:cubic-bezier(.2,.75,.25,1);
+}
+html{scroll-behavior:smooth}
+button,a,[role="button"],.btn,.nav-item,.tab,.chip,.card,.portal,.filter,.quiet{
+  transition:
+    background-color var(--motion-normal) var(--ease-ui),
+    color var(--motion-normal) var(--ease-ui),
+    border-color var(--motion-normal) var(--ease-ui),
+    box-shadow var(--motion-normal) var(--ease-ui),
+    transform var(--motion-normal) var(--ease-ui),
+    opacity var(--motion-normal) var(--ease-ui);
+}
+button:active,.btn:active,[role="button"]:active{transform:scale(.985)}
+.card,.portal{animation:vcSureEnter .28s var(--ease-ui) both}
+@keyframes vcSureEnter{
+  from{opacity:0;transform:translateY(5px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.modal-backdrop,.asstBackdrop,.assistant-backdrop{
+  transition:opacity var(--motion-slow) var(--ease-ui);
+}
+.modal,.asst,.assistant-panel{
+  animation:vcSurePanelIn .24s var(--ease-ui) both;
+  transform-origin:bottom center;
+}
+@keyframes vcSurePanelIn{
+  from{opacity:0;transform:translateY(10px) scale(.99)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+button:focus-visible,a:focus-visible,[role="button"]:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:3px solid rgba(22,125,131,.38);
+  outline-offset:2px;
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
+
+/* Warm-ivory + deep teal/navy dark mode */
+html[data-theme="dark"]{
+  color-scheme:dark;
+  --ink:#edf3f3;
+  --text:#e5eded;
+  --muted:#a9b8bc;
+  --dim:#a9b8bc;
+  --paper:#111a1d;
+  --bg:#111a1d;
+  --surface:#192629;
+  --card:#192629;
+  --line:#304247;
+  --border:#304247;
+  --navy:#9bc9e8;
+  --teal:#64c5c0;
+  --gold:#d8bd79;
+  background:#111a1d!important;
+  color:#edf3f3!important;
+}
+html[data-theme="dark"] body{
+  background:#111a1d!important;
+  color:#edf3f3!important;
+}
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .portal,
+html[data-theme="dark"] .modal,
+html[data-theme="dark"] .asst,
+html[data-theme="dark"] .assistant-panel,
+html[data-theme="dark"] .filter,
+html[data-theme="dark"] .stat,
+html[data-theme="dark"] .profile-card{
+  background:#192629!important;
+  color:#edf3f3!important;
+  border-color:#304247!important;
+  box-shadow:0 8px 26px rgba(0,0,0,.16);
+}
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select{
+  background:#111a1d!important;
+  color:#edf3f3!important;
+  border-color:#3a5156!important;
+}
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder{color:#91a4a9!important}
+html[data-theme="dark"] .dim,
+html[data-theme="dark"] .muted,
+html[data-theme="dark"] .quiet,
+html[data-theme="dark"] .subtitle{color:#a9b8bc!important}
+html[data-theme="dark"] .chip,
+html[data-theme="dark"] .tag,
+html[data-theme="dark"] .pill{
+  background:#21383d!important;
+  color:#bfe7e4!important;
+  border-color:#3a6267!important;
+}
+html[data-theme="dark"] .nav,
+html[data-theme="dark"] nav,
+html[data-theme="dark"] .bottom-nav,
+html[data-theme="dark"] .topbar,
+html[data-theme="dark"] header{
+  background:rgba(17,26,29,.96)!important;
+  color:#edf3f3!important;
+  border-color:#304247!important;
+}
+html[data-theme="dark"] .modal-backdrop,
+html[data-theme="dark"] .asstBackdrop,
+html[data-theme="dark"] .assistant-backdrop{
+  background:rgba(2,8,10,.68)!important;
+}
+html[data-theme="dark"] .goldy{
+  background:#302d22!important;
+  color:#f1dfac!important;
+  border-color:#665b38!important;
+}
+html[data-theme="dark"] a{color:#8edbd6}
+html[data-theme="dark"] .btn{box-shadow:0 5px 14px rgba(0,0,0,.16)}
+.vcs-theme-toggle{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:38px;padding:8px 12px;border-radius:12px;
+  border:1px solid var(--line,#dfe5e5);
+  background:var(--surface,#fff);color:var(--ink,#24343a);
+  font:inherit;font-size:13px;font-weight:600;cursor:pointer;
+}
+.vcs-theme-toggle svg{width:17px;height:17px;flex:none}
+.vcs-theme-toggle:hover{transform:translateY(-1px)}
+html[data-theme="dark"] .vcs-theme-toggle{
+  background:#21383d;color:#e5eded;border-color:#3a6267;
+}
+
+
+
+
+
+.vcs-theme-toggle{display:inline-flex;align-items:center;justify-content:flex-start;gap:10px;width:100%;min-height:46px;padding:11px 14px;border-radius:13px;border:1px solid var(--line,#dfe5e5);background:var(--surface,#fff);color:var(--ink,#24343a);font:inherit;font-size:14px;font-weight:650;cursor:pointer;transition:background-color .2s ease,border-color .2s ease,transform .2s ease}
+.vcs-theme-toggle:hover{transform:translateY(-1px)}
+.vcs-theme-toggle .theme-icon{font-size:20px;line-height:1;color:var(--accent,#167d83);width:24px;text-align:center}
+html[data-theme="dark"] .vcs-theme-toggle{background:#21383d;color:#e5eded;border-color:#3a6267}
+.profile-preferences{margin-top:16px}
+.profile-preferences .section-label{margin-bottom:10px}
+
+
+/* Mitra replies animate in without rebuilding/flickering the whole chat */
+.asstLog .cmsg{animation:mitraMessageIn .18s ease-out both}
+@keyframes mitraMessageIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+
+/* VCSure-styled profile selectors in both Founder and Investor editors */
+select,.settings-page select,.profile-editor select,.edit-profile select,
+select.input,select.field,.form-field select{
+  appearance:none;-webkit-appearance:none;width:100%;min-height:48px;
+  border:1px solid #dce4e4;border-radius:14px;padding:12px 44px 12px 14px;
+  color:#24343a;background-color:#fffdfa;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%236b7c80' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;font:inherit;line-height:1.35;
+  box-shadow:0 1px 2px rgba(22,52,58,.03);
+  transition:border-color .18s ease,box-shadow .18s ease,background-color .18s ease;
+}
+select:focus,.settings-page select:focus,.profile-editor select:focus,.edit-profile select:focus,
+select.input:focus,select.field:focus,.form-field select:focus{
+  outline:none;border-color:#167d83;box-shadow:0 0 0 3px rgba(22,125,131,.13);
+}
+select option{background:#fffdfa;color:#24343a}
+html[data-theme="dark"] select,html[data-theme="dark"] .settings-page select,
+html[data-theme="dark"] .profile-editor select,html[data-theme="dark"] .edit-profile select,
+html[data-theme="dark"] select.input,html[data-theme="dark"] select.field,
+html[data-theme="dark"] .form-field select{
+  background-color:#192629;color:#edf3f3;border-color:#304247;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23a9b8bc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+html[data-theme="dark"] select option{background:#192629;color:#edf3f3}
+
+
+/* Branded custom select popup for profile editors */
+.vcs-select-wrap{position:relative;width:100%;min-width:0}
+.vcs-select-trigger{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;
+  min-height:48px;padding:12px 14px;border:1px solid #dce4e4;border-radius:14px;
+  background:#fffdfa;color:#24343a;font:inherit;text-align:left;cursor:pointer;
+  box-shadow:0 1px 2px rgba(22,52,58,.03);transition:border-color .18s ease,box-shadow .18s ease,background .18s ease;
+}
+.vcs-select-trigger:focus-visible{outline:3px solid rgba(22,125,131,.24);outline-offset:2px}
+.vcs-select-trigger .vcs-select-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vcs-select-trigger .vcs-select-chevron{flex:none;width:16px;height:16px;color:#718286;transition:transform .18s ease}
+.vcs-select-wrap.is-open .vcs-select-trigger{border-color:#167d83;box-shadow:0 0 0 3px rgba(22,125,131,.12)}
+.vcs-select-wrap.is-open .vcs-select-chevron{transform:rotate(180deg)}
+.vcs-select-menu{
+  position:absolute;z-index:160;top:calc(100% + 6px);left:0;right:0;max-height:min(300px,42vh);
+  overflow:auto;padding:5px;border:1px solid #dce4e4;border-radius:15px;background:#fffdfa;
+  box-shadow:0 14px 36px rgba(24,43,49,.18);animation:vcsSelectIn .15s ease-out both;
+}
+.vcs-select-option{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;
+  min-height:44px;padding:10px 12px;border:0;border-radius:10px;background:transparent;
+  color:#24343a;font:inherit;text-align:left;cursor:pointer;
+}
+.vcs-select-option:hover,.vcs-select-option:focus-visible{background:#eaf5f5;outline:none}
+.vcs-select-option[aria-selected="true"]{background:#e2f2f2;color:#125e68;font-weight:650}
+.vcs-select-option .vcs-select-check{opacity:0;color:#167d83;flex:none}
+.vcs-select-option[aria-selected="true"] .vcs-select-check{opacity:1}
+.vcs-select-wrap select.vcs-native-hidden{
+  position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;
+  pointer-events:none!important;left:0!important;bottom:0!important;margin:0!important;
+}
+html[data-theme="dark"] .vcs-select-trigger{
+  background:#192629!important;color:#edf3f3!important;border-color:#3a5156!important;
+}
+html[data-theme="dark"] .vcs-select-trigger .vcs-select-chevron{color:#a9b8bc}
+html[data-theme="dark"] .vcs-select-menu{
+  background:#192629;border-color:#304247;box-shadow:0 16px 38px rgba(0,0,0,.4);
+}
+html[data-theme="dark"] .vcs-select-option{color:#edf3f3}
+html[data-theme="dark"] .vcs-select-option:hover,
+html[data-theme="dark"] .vcs-select-option:focus-visible{background:#21383d}
+html[data-theme="dark"] .vcs-select-option[aria-selected="true"]{background:#21474b;color:#c5eeeb}
+@keyframes vcsSelectIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.vcs-select-menu{animation:none}}
+
+
+/* Dark theme contrast fixes for controls, header switcher, filters and Mitra */
+html[data-theme="dark"] .topbar .btn,
+html[data-theme="dark"] header .btn,
+html[data-theme="dark"] .header .btn,
+html[data-theme="dark"] .switch-btn,
+html[data-theme="dark"] .workspace-switch,
+html[data-theme="dark"] button[onclick*="switchRole"],
+html[data-theme="dark"] button[onclick*="toggleRole"]{
+  background:#21383d!important;color:#edf3f3!important;border-color:#3a6267!important;
+}
+html[data-theme="dark"] .filter-row select,
+html[data-theme="dark"] .filters select,
+html[data-theme="dark"] .discover-filters select,
+html[data-theme="dark"] .discover select,
+html[data-theme="dark"] select{
+  background-color:#192629!important;color:#edf3f3!important;border-color:#3a5156!important;
+  color-scheme:dark;
+}
+html[data-theme="dark"] .asstLog .cmsg.them,
+html[data-theme="dark"] .asstLog .cmsg:not(.me),
+html[data-theme="dark"] .cmsg.them{
+  background:#21383d!important;color:#edf3f3!important;border-color:#3a6267!important;
+}
+html[data-theme="dark"] .asstLog .cmsg.me,
+html[data-theme="dark"] .cmsg.me{
+  background:#126f78!important;color:#fff!important;
+}
+html[data-theme="dark"] .chatChips .chip,
+html[data-theme="dark"] .chatChips button{
+  background:#21383d!important;color:#c5eeeb!important;border-color:#3a6267!important;
+}
+html[data-theme="dark"] .asstHead,
+html[data-theme="dark"] .asst-header,
+html[data-theme="dark"] .assistant-header{
+  background:#21383d!important;color:#edf3f3!important;border-color:#304247!important;
+}
+html[data-theme="dark"] .asstHead *,
+html[data-theme="dark"] .asst-header *,
+html[data-theme="dark"] .assistant-header *{
+  color:inherit;
+}
+html[data-theme="dark"] .asstClose,
+html[data-theme="dark"] .asst-close,
+html[data-theme="dark"] .assistant-close{
+  background:#192629!important;color:#edf3f3!important;border-color:#3a6267!important;
+}
+html[data-theme="dark"] .vcs-theme-toggle,
+html[data-theme="dark"] .profile-preferences{
+  background:#192629!important;color:#edf3f3!important;border-color:#304247!important;
+}
+html[data-theme="dark"] .profile-preferences p{color:#a9b8bc!important}
+
+
+/* Final dark-mode usability pass: keep controls readable, not pale-on-pale */
+html[data-theme="dark"]{
+  --navy:#173b54;
+  --accent:#117b8b;
+  --accent-ink:#bde9e8;
+  --accent-soft:#1c3b40;
+  --surface-2:#213237;
+  --ink-faint:#9eb0b5;
+}
+html[data-theme="dark"] .btn.ghost,
+html[data-theme="dark"] .btn.subtle,
+html[data-theme="dark"] .portal-switch-btn,
+html[data-theme="dark"] .nav .btn,
+html[data-theme="dark"] .nav button,
+html[data-theme="dark"] .nav-inner button{
+  background:#1c3439!important;
+  color:#e7f2f2!important;
+  border-color:#3b5b61!important;
+}
+html[data-theme="dark"] .btn.navy,
+html[data-theme="dark"] .btn:not(.ghost):not(.subtle){
+  background:#126f80!important;
+  color:#fff!important;
+  border-color:#126f80!important;
+}
+html[data-theme="dark"] .dd-btn,
+html[data-theme="dark"] .dd-menu,
+html[data-theme="dark"] .dd-option,
+html[data-theme="dark"] .dd-item{
+  background:#192629!important;
+  color:#edf3f3!important;
+  border-color:#3a5156!important;
+}
+html[data-theme="dark"] .dd-menu button{
+  background:transparent!important;color:#edf3f3!important;
+}
+html[data-theme="dark"] .dd-menu button:hover,
+html[data-theme="dark"] .dd-option:hover,
+html[data-theme="dark"] .dd-item:hover{
+  background:#254147!important;color:#fff!important;
+}
+html[data-theme="dark"] .mitra-close,
+html[data-theme="dark"] .asst-close,
+html[data-theme="dark"] button[aria-label*="Close"],
+html[data-theme="dark"] button[aria-label*="close"]{
+  background:#192629!important;
+  color:#d7eeee!important;
+  border:1px solid #3b6267!important;
+}
+html[data-theme="dark"] .mitra-close svg,
+html[data-theme="dark"] .asst-close svg,
+html[data-theme="dark"] button[aria-label*="Close"] svg,
+html[data-theme="dark"] button[aria-label*="close"] svg{
+  stroke:#d7eeee!important;color:#d7eeee!important;
+}
+html[data-theme="dark"] .mitra-launcher,
+html[data-theme="dark"] .mitra-launcher *{
+  color:#edf3f3;
+}
+html[data-theme="dark"] .mitra-launcher{
+  background:#172d32!important;border-color:#3a6267!important;
+}
+html[data-theme="dark"] .mitra-launcher-icon{
+  background:#126f80!important;color:#fff!important;
+}
+/* Keep fixed mobile navigation from covering the final card/actions/footer */
+@media(max-width:700px){
+  body{padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px))}
+  main,.main,.app-main,#appMain,.page-wrap,.content-wrap{
+    padding-bottom:calc(96px + env(safe-area-inset-bottom, 0px));
+  }
+  .bottomNav{
+    padding-bottom:calc(6px + env(safe-area-inset-bottom, 0px));
+    min-height:74px;
+    box-sizing:content-box;
+  }
+  .mitra-launcher{bottom:calc(88px + env(safe-area-inset-bottom, 0px))!important}
+}
+/* Fix pale text on pale buttons in dark mode, including Edit profile and role switch */
+html[data-theme="dark"] .btn[style*="background:#fff"],
+html[data-theme="dark"] button[style*="background: #fff"],
+html[data-theme="dark"] button[style*="background-color: rgb(255, 255, 255)"]{
+  background:#1c3439!important;color:#e7f2f2!important;border-color:#3b5b61!important;
+}
+/* Avoid pale-blue primary actions inherited from the old light-mode navy token */
+html[data-theme="dark"] .btn.navy,
+html[data-theme="dark"] button.btn.navy{
+  background:#173f59!important;color:#fff!important;border-color:#28566e!important;
+}
+
+
+@media(max-width:700px){
+  html[data-theme="dark"] .vcs-app-content{padding-bottom:calc(104px + env(safe-area-inset-bottom, 0px))}
+}
 
 </style>
 </head>
@@ -726,21 +1273,21 @@ function fmtT(s){const m=Math.floor(s/60);return m?`${m}m ${Math.round(s%60)}s`:
 /* thesis freshness */
 function freshChip(v){
   const d=daysSince(v.thesisUpdatedAt);
-  if(d<=30)return `<span class="chip green" title="${esc(v.thesisNote||"")}">thesis fresh · ${d}d</span>`;
-  if(d<=90)return `<span class="chip amber" title="${esc(v.thesisNote||"")}">thesis updated ${d}d ago</span>`;
-  return `<span class="chip red" title="${esc(v.thesisNote||"")}">stale thesis · ${d}d</span>`;
+  if(d<=30)return `<span class="chip green" title="${esc(v.thesisNote||"")}">Thesis updated ${d===0?"today":d+" days ago"}</span>`;
+  if(d<=90)return `<span class="chip amber" title="${esc(v.thesisNote||"")}">Thesis updated ${d} days ago</span>`;
+  return `<span class="chip red" title="${esc(v.thesisNote||"")}">Thesis may be outdated · ${d} days</span>`;
 }
 
 /* fit */
 function fit(vc,st){
   let s=10,why=[];
-  if(vc.sectors.includes(st.sector)){s+=38;why.push("invests in "+st.sector)}
-  if(vc.stages.includes(st.stage)){s+=26;why.push("writes cheques at "+st.stage)}
-  else if(vc.stages.some(x=>STAGES.indexOf(x)===STAGES.indexOf(st.stage)+1)){s+=10;why.push("one stage early — building the relationship")}
-  if(st.raising>=vc.cheque[0]&&st.raising<=vc.cheque[1]){s+=20;why.push("ask fits their cheque ("+cr(vc.cheque[0])+" to "+cr(vc.cheque[1])+")")}
-  else if(st.raising<vc.cheque[0]){s+=4;why.push("ask below their minimum")}
-  else{s+=6;why.push("ask above their typical cheque")}
-  if(!why.length)why.push("adjacent thesis");
+  if(vc.sectors.includes(st.sector)){s+=38;why.push("Sector match · "+st.sector)}
+  if(vc.stages.includes(st.stage)){s+=26;why.push("Stage match · "+st.stage)}
+  else if(vc.stages.some(x=>STAGES.indexOf(x)===STAGES.indexOf(st.stage)+1)){s+=10;why.push("One stage earlier than their focus")}
+  if(st.raising>=vc.cheque[0]&&st.raising<=vc.cheque[1]){s+=20;why.push("Your ask fits their cheque range")}
+  else if(st.raising<vc.cheque[0]){s+=4;why.push("Your ask is below their usual range")}
+  else{s+=6;why.push("Your ask is above their usual range")}
+  if(!why.length)why.push("Potential thesis overlap");
   return{score:Math.min(97,s),why};
 }
 
@@ -828,6 +1375,7 @@ function render(){
     else if(view==="messages")v.innerHTML=messagesHTML();
     else if(view==="partners")v.innerHTML=partnersHTML();
     else if(view==="profile")v.innerHTML=profileTabsHTML();
+    else if(view==="settings")v.innerHTML=settingsPageHTML();
   }catch(err){
     console.error("VCSure render failed",err);
     const v=$("#viewRoot");
@@ -867,21 +1415,21 @@ function drawNav(){
   const pend=roleMeetings().filter(m=>m.status==="requested"&&m.direction==="in").length;
   const unreadP=unreadPartners();
   const short={};
-  const bar=items.length<=6&&isF?items:items.slice(0,5);
-  const rest=items.length<=6&&isF?[]:items.slice(5);
+  const bar=items.slice(0,5);
+  const rest=items.slice(5);
   n.innerHTML=`<nav class="nav"><div class="nav-inner">
     <div class="logo" onclick="go('home')"><div class="logo-mark">VS</div><div>VC Sure<small>${isF?"Startup portal":"VC portal"}</small></div></div>
     <div class="nav-tabs">${items.map(([k,l])=>`<button class="nav-tab ${view===k?"active":""}" onclick="go('${k}')">${l}</button>`).join("")}
     ${pend?`<button class="nav-tab" onclick="go('meetings')" style="color:var(--red)">${pend} new</button>`:""}</div>
     <div class="acct"><div class="who"><b>${esc(state.auth.name)}</b><span>${isF?esc(state.me.startup||""):esc(state.vcMe.name||"")}</span></div>
     <div class="gavatar">${initials(state.auth.name||"W")}</div>
-    <button class="linkout portal-switch-btn" onclick="switchPortal()" aria-label="Choose portal"><span class="dm">Switch portal</span><span class="mm">Switch ↔</span></button>
-    <button class="linkout askbtn" onclick="openAssistant()" aria-label="Help"><span class="dm">Help</span><span class="mm">Ask</span></button>
+    <button class="linkout portal-switch-btn" onclick="switchPortal()" aria-label="Choose portal"><span class="dm">Workspace</span><span class="mm">Switch ↔</span></button>
     </div></div></nav>
     <div class="bottomNav">
       ${bar.map(([k,l])=>`<button class="bTab ${view===k?"active":""}" onclick="go('${k}')">${ICONS[k]}<span>${short[l]||l}</span>${k==="meetings"&&pend?`<span class="bdg">${pend}</span>`:""}${k==="partners"&&unreadP?`<span class="bdg">${unreadP}</span>`:""}</button>`).join("")}
       ${rest.length?`<button class="bTab ${rest.some(r=>r[0]===view)?"active":""}" onclick="moreSheet()">${ICONS.more}<span>More</span>${unreadP?`<span class="bdg">${unreadP}</span>`:""}</button>`:""}
-    </div>`;
+    </div>
+    ${asstOpen?"":`<button class="mitra-launcher" onclick="openAssistant()" aria-label="Open Mitra help"><span class="mitra-launcher-icon">?</span><span><small>Need a hand?</small><b>Ask Mitra</b></span></button>`}`;
 }
 function moreSheet(){
   const isF=state.role==="founder";
@@ -1230,7 +1778,7 @@ function selectPortal(next){
   save();
   const root=document.body;
   const old=document.getElementById("portalTransition");if(old)old.remove();
-  root.insertAdjacentHTML("beforeend",`<div id="portalTransition" class="portal-transition" role="status" aria-live="polite"><div class="transition-orbit"><span class="orbit-dot dot-one"></span><span class="orbit-dot dot-two"></span><span class="orbit-dot dot-three"></span><div class="transition-logo">VS</div></div><div class="transition-title">Preparing your ${next==='founder'?'Founder':'Investor'} workspace</div><div class="transition-subtitle">Getting your dashboard ready</div><div class="transition-progress"><span></span></div></div>`);
+  root.insertAdjacentHTML("beforeend",`<div id="portalTransition" class="portal-transition" role="status" aria-live="polite"><div class="transition-orbit" aria-hidden="true"><span class="orbit-dot dot-one"></span><span class="orbit-dot dot-two"></span><span class="orbit-dot dot-three"></span></div><div class="transition-title">Getting things ready…</div><div class="transition-subtitle">Preparing your workspace</div><div class="transition-progress" aria-hidden="true"><span></span></div></div>`);
   const finish=()=>{const el=document.getElementById("portalTransition");if(el)el.classList.add("is-leaving");setTimeout(()=>{const e=document.getElementById("portalTransition");if(e)e.remove();if(!onboarded()){render();onboardModal();return;}render();},220);};
   setTimeout(finish,850);
 }
@@ -1356,50 +1904,60 @@ function finishOnboard(){
 const NAVL={home:"Home",discover:"Matches",meetings:"Meetings",messages:"Messages",partners:"Partners",profile:"Profile"};
 function navLabel(v,tab){const f=state.role==="founder";if(v==="saved")return f?"Pipeline":"Deals";if(v==="profile"&&tab==="deck")return "Profile → Pitch deck";if(v==="partners"&&tab==="shared")return "Partners → Shared decks";return NAVL[v]||v}
 const KB_F=[
- {k:["cancel a meeting","cancel meeting","cancel my meeting","cancel","withdraw"],a:"Open <b>Meetings</b> and tap <b>Cancel</b> on a pending or accepted meeting. Accepted meetings can also be marked <b>Mark done</b> once the call has happened.",go:["meetings"]},
- {k:["find vc","find investor","find a vc","find fund","find an investor","looking for investor","browse vc","discover","which fund","vcs","my matches","matches"],a:"Open <b>Matches</b>. Funds are sorted by how well they fit your startup. Narrow them with the <b>Sector</b>, <b>Stage</b> and <b>Cheque size</b> filters, search by name or city, or sort by cheque size. Each card shows a fit score and why you match.",go:["discover"]},
- {k:["request a meeting","request meeting","request an intro","introduction","warm intro","reach out","contact a","send request","request","intro"],a:"Open <b>Matches</b>, pick a fund and tap <b>Request meeting</b>. Write a line or two on why them, optionally tap <b>Review my note</b>, then <b>Send request</b>. The fund has 7 days to accept or pass.",go:["discover"]},
- {k:["match score","fit score","score","matching","how does match","fit ring","what does the match"],a:"The score (0–100) compares your startup with each fund: <b>sector</b>, <b>stage</b>, and whether your raise fits their <b>cheque range</b>. The chips under each fund explain why you match. Change your details in <b>Profile → Open Settings</b> and scores update instantly.",go:["profile"]},
+ {k:["cancel a meeting","cancel meeting","cancel my meeting","cancel","withdraw"],a:"Open <b>Introductions</b> and tap <b>Cancel</b> on a pending or accepted meeting. Accepted meetings can also be marked <b>Mark done</b> once the call has happened.",go:["meetings"]},
+ {k:["find vc","find investor","find a vc","find fund","find an investor","looking for investor","browse vc","discover","which fund","vcs","my matches","matches"],a:"Open <b>Find investors</b>. Funds are sorted by how well they fit your startup. Narrow them with the <b>Sector</b>, <b>Stage</b> and <b>Cheque size</b> filters, search by name or city, or sort by cheque size. Each card shows a fit score and why you match.",go:["discover"]},
+ {k:["request a meeting","request meeting","request an intro","introduction","warm intro","reach out","contact a","send request","request","intro"],a:"Open <b>Find investors</b>, pick a fund and tap <b>Request meeting</b>. Write a line or two on why them, optionally tap <b>Review my note</b>, then <b>Send request</b>. The fund has 7 days to accept or pass.",go:["discover"]},
+ {k:["match score","fit score","score","matching","how does match","fit ring","what does the match"],a:"The score (0–100) compares your startup with each fund: <b>sector</b>, <b>stage</b>, and whether your raise fits their <b>cheque range</b>. The chips under each fund explain why you match. Change your details in <b>Profile → Edit profile</b> and scores update instantly.",go:["profile"]},
  {k:["fresh","stale","thesis updated","green chip","red chip"],a:"The freshness chip on a fund card shows when it last updated its thesis. Green means current, red means stale — so you know if its focus is still what it says."},
- {k:["shortlist","save a","save to","pipeline","track fund","saved"],a:"On a fund's card in <b>Matches</b>, tap <b>Shortlist</b>. Shortlisted funds collect in <b>Pipeline</b>, where you can request a meeting when you're ready — one at a time works best.",go:["saved"]},
- {k:["schedule","meeting","book a call","calendar","slot","what time"],a:"<b>Meetings</b> lists every request and its status. When a fund accepts, a conversation opens in <b>Messages</b> — agree a time there (tap a suggested slot). Use <b>Mark done</b> after the call, or <b>Cancel</b> if plans change.",go:["meetings"]},
+ {k:["shortlist","save a","save to","pipeline","track fund","saved"],a:"On a fund's card in <b>Find investors</b>, tap <b>Shortlist</b>. Shortlisted funds collect in <b>Pipeline</b>, where you can request a meeting when you're ready — one at a time works best.",go:["saved"]},
+ {k:["schedule","meeting","book a call","calendar","slot","what time"],a:"<b>Introductions</b> lists every request and its status. When a fund accepts, a conversation opens in <b>Messages</b> — agree a time there (tap a suggested slot). Use <b>Mark done</b> after the call, or <b>Cancel</b> if plans change.",go:["meetings"]},
  {k:["message","chat","talk to","conversation","reply"],a:"Open <b>Messages</b>. Conversations appear once a fund accepts your intro. Pick one, type in the box and tap <b>Send</b>.",go:["messages"]},
- {k:["edit my","update my","change my","profile","settings","startup details","traction","my raise","sector","stage"],a:"Open <b>Profile</b> and tap <b>Open Settings</b> to edit your sector, stage, raise amount and traction. Fit scores recalculate immediately.",go:["profile"]},
+ {k:["edit my","update my","change my","profile","settings","startup details","traction","my raise","sector","stage"],a:"Open <b>Profile</b> and tap <b>Edit profile</b> to edit your sector, stage, raise amount and traction. Fit scores recalculate immediately.",go:["profile"]},
  {k:["share my deck","share deck","share pitch","deck link","send my deck"],a:"Open <b>Profile → Pitch deck</b>, tap <b>Preview my deck</b>, then <b>Share</b> to copy your deck link. Funds you've accepted open it in the secure viewer.",go:["profile","deck"]},
  {k:["edit deck","edit my deck","upload deck","upload my deck","new version","update deck"],a:"Open <b>Profile → Pitch deck</b> and tap <b>Edit deck</b> to upload or update it.",go:["profile","deck"]},
  {k:["who viewed","who opened","deck views","analytics","how long","heatmap"],a:"<b>Profile → Pitch deck</b> shows recorded deck views and time spent when viewing data is available.",go:["profile","deck"]},
  {k:["pitch deck","my deck","deck"],a:"Open <b>Profile → Pitch deck</b>. Use <b>Edit deck</b> to change it and <b>Preview my deck</b> to see what funds see.",go:["profile","deck"]},
  {k:["status","expired","system pass","declined","accepted","completed","cancelled","what does requested"],a:"<b>Requested</b>: waiting, closes after 7 days (3 for priority). <b>Accepted</b>: the fund agreed — chat in Messages. <b>Declined</b>: they passed. <b>Completed</b>: you marked it done. <b>System pass</b>: the fund didn't reply in time — not a decline, and any priority credit is refunded. <b>Cancelled</b>: closed by you or the fund.",go:["meetings"]},
  {k:["price","pricing","cost","fee","free","subscription","how much"],a:"Check the current VCSure pricing and service terms before relying on any fee or payment arrangement."},
- {k:["accept","pass on","incoming","wants to meet","respond to"],a:"When a fund requests a meeting with you, it appears on <b>Home</b> with <b>Accept</b> and <b>Pass</b>. Accepting opens a conversation in <b>Messages</b>.",go:["home"]},
+ {k:["accept","pass on","incoming","wants to meet","respond to"],a:"When a fund requests a meeting with you, it appears on <b>Overview</b> with <b>Accept</b> and <b>Pass</b>. Accepting opens a conversation in <b>Messages</b>.",go:["home"]},
  {k:["partner message","partners","partner","internal"],a:"Partner messages are internal to a fund's team and aren't part of the Startup portal. Your conversations with funds are in <b>Messages</b>.",go:["messages"]}
 ];
 const KB_V=[
- {k:["cancel a meeting","cancel meeting","cancel my meeting","cancel","withdraw"],a:"Open <b>Meetings</b> and tap <b>Cancel</b> on a pending or accepted meeting. Accepted meetings can also be marked <b>Mark done</b> once the call has happened.",go:["meetings"]},
- {k:["find startup","find a startup","deal flow","browse","discover","new startups","startups","my matches","matches"],a:"Open <b>Matches</b>. Startups are sorted by fit to your thesis. Filter by <b>Sector</b> or <b>Stage</b>, or search by name, founder or city. Each card has <b>View deck</b>, <b>Save to pipeline</b> and <b>Request meeting</b>.",go:["discover"]},
- {k:["review a deal","review deal","evaluate","look at a startup","due diligence","view deck","open deck"],a:"In <b>Matches</b>, tap <b>View deck</b> to open the secure viewer (time per slide is shared with the founder). From there you can <b>Forward to partner</b>, <b>Save</b>, or <b>Request meeting</b>. Track it afterwards in <b>Deals</b>.",go:["discover"]},
- {k:["request a meeting","request meeting","request an intro","introduction","reach out","contact","request"],a:"Open <b>Matches</b>, choose a startup and tap <b>Request meeting</b>, add a short note, then <b>Send request</b>. The founder has 7 days to respond.",go:["discover"]},
- {k:["match score","fit score","score","matching","fit ring","how does match"],a:"The score (0–100) compares your thesis — <b>sectors</b>, <b>stages</b> and <b>cheque range</b> — with each startup's sector, stage and raise. Update your thesis from <b>Home → Update sprint thesis</b> or <b>Profile → Open Settings</b> and scores follow.",go:["home"]},
- {k:["pipeline","save a","save to","deals","manage","stage","track"],a:"Tap <b>Save to pipeline</b> on a startup card in <b>Matches</b>. <b>Deals</b> lists everything you've saved — set each deal's stage to new, reviewing, meeting, term sheet or passed.",go:["saved"]},
- {k:["accept","pass on","incoming","wants to meet","respond to","priority"],a:"Founder requests appear on <b>Home</b> with <b>Accept</b> and <b>Pass</b>. A ⚡ Priority badge means the founder paid for a fast review (72-hour window). Accepting opens a conversation in <b>Messages</b> and shares the deck with you.",go:["home"]},
- {k:["schedule","meeting","book a call","calendar","slot","what time"],a:"<b>Meetings</b> lists every request with its status. Once accepted, agree a time with the founder in <b>Messages</b>. Use <b>Mark done</b> after the call.",go:["meetings"]},
+ {k:["cancel a meeting","cancel meeting","cancel my meeting","cancel","withdraw"],a:"Open <b>Introductions</b> and tap <b>Cancel</b> on a pending or accepted meeting. Accepted meetings can also be marked <b>Mark done</b> once the call has happened.",go:["meetings"]},
+ {k:["find startup","find a startup","deal flow","browse","discover","new startups","startups","my matches","matches"],a:"Open <b>Find startups</b>. Startups are sorted by fit to your thesis. Filter by <b>Sector</b> or <b>Stage</b>, or search by name, founder or city. Each card has <b>View deck</b>, <b>Save to pipeline</b> and <b>Request meeting</b>.",go:["discover"]},
+ {k:["review a deal","review deal","evaluate","look at a startup","due diligence","view deck","open deck"],a:"In <b>Find startups</b>, tap <b>View deck</b> to open the secure viewer (time per slide is shared with the founder). From there you can <b>Forward to partner</b>, <b>Save</b>, or <b>Request meeting</b>. Track it afterwards in <b>Deals</b>.",go:["discover"]},
+ {k:["request a meeting","request meeting","request an intro","introduction","reach out","contact","request"],a:"Open <b>Find startups</b>, choose a startup and tap <b>Request meeting</b>, add a short note, then <b>Send request</b>. The founder has 7 days to respond.",go:["discover"]},
+ {k:["match score","fit score","score","matching","fit ring","how does match"],a:"The score (0–100) compares your thesis — <b>sectors</b>, <b>stages</b> and <b>cheque range</b> — with each startup's sector, stage and raise. Update your thesis from <b>Home → Update sprint thesis</b> or <b>Profile → Edit profile</b> and scores follow.",go:["home"]},
+ {k:["pipeline","save a","save to","deals","manage","stage","track"],a:"Tap <b>Save to pipeline</b> on a startup card in <b>Find startups</b>. <b>Deals</b> lists everything you've saved — set each deal's stage to new, reviewing, meeting, term sheet or passed.",go:["saved"]},
+ {k:["accept","pass on","incoming","wants to meet","respond to","priority"],a:"Founder requests appear on <b>Overview</b> with <b>Accept</b> and <b>Pass</b>. A ⚡ Priority badge means the founder paid for a fast review (72-hour window). Accepting opens a conversation in <b>Messages</b> and shares the deck with you.",go:["home"]},
+ {k:["schedule","meeting","book a call","calendar","slot","what time"],a:"<b>Introductions</b> lists every request with its status. Once accepted, agree a time with the founder in <b>Messages</b>. Use <b>Mark done</b> after the call.",go:["meetings"]},
  {k:["share a deck","share deck","forward","send deck","deck with partner","share with partner"],a:"Open a startup's deck (<b>Matches → View deck</b>) and tap <b>Forward to partner</b>. Choose a partner, add a note, and it lands in <b>Partners</b>. The <b>Shared decks</b> tab shows each one's status.",go:["partners","shared"]},
  {k:["partner","partners","internal","team chat","investment team"],a:"<b>Partners</b> is for your own investment team — conversations plus <b>Shared decks</b>. Founders never see it. For founder conversations use <b>Messages</b>.",go:["partners"]},
  {k:["message","chat","talk to","conversation","reply"],a:"Open <b>Messages</b> to talk to founders (available once you accept a meeting). For internal team discussion, use <b>Partners</b>.",go:["messages"]},
- {k:["thesis","sprint","update thesis","fresh","stale"],a:"Tap <b>Update sprint thesis</b> on <b>Home</b> to refresh your sectors, stages and cheque range. Founders see changes immediately, so keep it fresh.",go:["home"]},
- {k:["edit my","update my","change my","profile","settings","fund","cheque","sectors","preferences"],a:"Open <b>Profile</b> and tap <b>Open Settings</b> to edit your fund details, sectors, stages and cheque size.",go:["profile"]},
+ {k:["thesis","sprint","update thesis","fresh","stale"],a:"Tap <b>Update sprint thesis</b> on <b>Overview</b> to refresh your sectors, stages and cheque range. Founders see changes immediately, so keep it fresh.",go:["home"]},
+ {k:["edit my","update my","change my","profile","settings","fund","cheque","sectors","preferences"],a:"Open <b>Profile</b> and tap <b>Edit profile</b> to edit your fund details, sectors, stages and cheque size.",go:["profile"]},
 
  {k:["status","expired","system pass","declined","completed","cancelled"],a:"Deal stages: <b>new</b>, <b>reviewing</b>, <b>meeting</b>, <b>term sheet</b>, <b>passed</b>. Meeting statuses: <b>requested</b> (7-day window), <b>accepted</b>, <b>declined</b>, <b>completed</b>, <b>cancelled</b>, and <b>system pass</b> — closed automatically when the other side didn't respond in time.",go:["meetings"]}
 ];
 let asstOpen=false,asstLog=[],asstRole=null;
 function asstSuggest(){return state.role==="founder"
-  ?["How do I find VCs?","How do I request an introduction?","How do I manage my pipeline?","Where is my pitch deck?"]
-  :["How do I find startups?","How do I review a deal?","How do I share a deck with partners?","What are Partners?"]}
+  ?["How do I find investors?","How do I shortlist a fund?","How do introductions work?","How do I edit my profile?","Where is my pitch deck?","How do I change dark mode?"]
+  :["How do I find startups?","How do I save a startup?","How do I respond to an introduction?","How do I edit my fund profile?","How do I message a founder?","How do I change dark mode?"]}
+function mitraFirstName(){const raw=(state.auth&&state.auth.name)||"";return raw.trim().split(/\s+/)[0]||"there"}
+function isGreeting(q){return /^(\s*)(hi|hello|hey|hiya|good morning|good afternoon|good evening|good night|namaste|what'?s up)(\b|[!. ,])/i.test(q||"")}
 function asstReply(q){
+  if(isGreeting(q)){const n=mitraFirstName();return{a:`Hey ${esc(n)}! 👋 I'm Mitra, your VCSure guide. I can help you find your way around, understand matches, manage introductions, messages, your profile or pitch decks. What would you like to do?`,sug:true}}
+  const raw=(q||"").toLowerCase();
+  if(/switch (portal|workspace)|change (portal|workspace)|other portal/.test(raw))return{a:"Tap <b>Workspace / Switch</b> in the top bar, then choose <b>Founder workspace</b> or <b>Investor workspace</b>. Your profiles stay separate.",go:["home"]};
+  if(/sign out|log ?out/.test(raw))return{a:"Open <b>Profile</b> and use the account actions at the bottom to sign out.",go:["profile"]};
+  if(/delete (my )?account|close my account/.test(raw))return{a:"Open <b>Profile</b>, then choose <b>Delete account</b> in the account actions. You will be asked to confirm. Permanent deletion requires the secure account-deletion service to be configured.",go:["profile"]};
+  if(/dark mode|light mode|change theme|theme|appearance/.test(raw))return{a:"Open <b>Profile</b> and find <b>Appearance</b>. Tap <b>Switch to dark mode</b> or <b>Switch to light mode</b>. Your choice is remembered on this device.",go:["profile"]};
+  if(/no matches|no investors|no startups|nothing showing|empty results/.test(raw))return{a:"Try clearing the filters first, then check that your sector, stage and funding/cheque range are accurate in <b>Profile → Edit profile</b>. Matches can only appear when eligible profiles exist.",go:["discover"]};
+  if(/what is mitra|who are you|what can you do/.test(raw))return{a:`I'm Mitra, ${esc(mitraFirstName())} — your VCSure guide. I can help you use ${state.role==="founder"?"Find investors, Pipeline, Introductions, Messages, Profile and pitch-deck tools":"Find startups, Pipeline, Introductions, Messages, Profile and partner-sharing tools"}.`};
   const t=" "+q.toLowerCase().replace(/[^a-z0-9₹ -]/g," ")+" ";
   const kb=state.role==="founder"?KB_F:KB_V;let best=null,bs=0;
   kb.forEach(e=>{let s=0;e.k.forEach(k=>{if(t.includes(k))s+=k.length});if(s>bs){bs=s;best=e}});
-  if(best)return{a:best.a,go:best.go};
+  if(best){let answer=best.a.replace(/<b>Matches<\/b>/g,`<b>${state.role==="founder"?"Find investors":"Find startups"}</b>`).replace(/Open <b>Profile<\/b> and tap <b>Open Settings<\/b>/g,'Open <b>Profile → Edit profile</b>').replace(/<b>Profile → Open Settings<\/b>/g,'<b>Profile → Edit profile</b>').replace(/<b>Meetings<\/b>/g,'<b>Introductions</b>').replace(/<b>Home<\/b>/g,'<b>Overview</b>');return{a:answer,go:best.go}}
   return{a:"I can help with using VC Sure — finding "+(state.role==="founder"?"funds":"startups")+", meetings, messages, your profile and more. Try one of these:",sug:true};
 }
 function openAssistant(){
@@ -1411,11 +1969,11 @@ function closeAssistant(){asstOpen=false;const r=$("#asstRoot");if(r)r.innerHTML
 function asstDraw(){
   const r=$("#asstRoot");if(!r)return;if(!asstOpen){r.innerHTML="";return}
   const last=asstLog[asstLog.length-1];const showSug=!last||last.sug;
-  r.innerHTML=`<section class="asst" role="dialog" aria-label="Mitra">
+  r.innerHTML=`<button class="asst-backdrop" onclick="closeAssistant()" aria-label="Close Mitra"></button><section class="asst" role="dialog" aria-modal="true" aria-label="Mitra">
     <div class="asstHead"><div class="logo-mark">M</div><div class="asstT"><b>Mitra</b><span>Your VC Sure guide · here to help</span></div>
       <button type="button" class="asstX" onclick="closeAssistant()" aria-label="Close Mitra"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <div class="asstLog" id="asstLog">
-      <div class="cmsg them">Hi, I'm Mitra. Ask me where things are or how a feature works in the ${state.role==="founder"?"Startup":"VC"} portal.</div>
+      <div class="cmsg them">Hi ${esc(mitraFirstName())}! 👋 I’m Mitra, your VCSure guide. Ask me anything about this portal and I’ll point you in the right direction.</div>
       ${asstLog.map(m=>m.u!==undefined?`<div class="cmsg me">${esc(m.u)}</div>`
         :`<div class="cmsg them">${m.a}${m.go?`<div class="chatChips" style="margin:8px 0 0"><button class="chip acc" onclick="asstGo('${m.go[0]}'${m.go[1]?`,'${m.go[1]}'`:""})">Open ${navLabel(m.go[0],m.go[1])}</button></div>`:""}</div>`).join("")}
       ${showSug?`<div class="chatChips">${asstSuggest().map(s=>`<button class="chip acc" onclick="asstAsk(this.textContent)">${esc(s)}</button>`).join("")}</div>`:""}
@@ -1424,8 +1982,31 @@ function asstDraw(){
   const l=$("#asstLog");if(l)l.scrollTop=l.scrollHeight;
 }
 function asstAsk(text){
-  const i=$("#asstText");let q=typeof text==="string"?text:(i?i.value:"");q=(q||"").trim();if(!q)return;
-  asstLog.push({u:q});asstLog.push(asstReply(q));asstDraw();
+  const input=$("#asstText");
+  let q=typeof text==="string"?text:(input?input.value:"");
+  q=(q||"").trim();if(!q)return;
+  const log=$("#asstLog");
+  if(!log){asstLog.push({u:q});asstLog.push(asstReply(q));asstDraw();return;}
+  const suggestions=log.querySelector(".chatChips");
+  if(suggestions)suggestions.remove();
+  const userNode=document.createElement("div");
+  userNode.className="cmsg me";userNode.textContent=q;
+  log.appendChild(userNode);
+  asstLog.push({u:q});
+  const reply=asstReply(q);asstLog.push(reply);
+  const replyNode=document.createElement("div");
+  replyNode.className="cmsg them";
+  replyNode.innerHTML=reply.a;
+  if(reply.go){
+    const chips=document.createElement("div");chips.className="chatChips";chips.style.margin="8px 0 0";
+    const btn=document.createElement("button");btn.className="chip acc";btn.type="button";
+    btn.textContent="Open "+navLabel(reply.go[0],reply.go[1]);
+    btn.addEventListener("click",()=>asstGo(reply.go[0],reply.go[1]));
+    chips.appendChild(btn);replyNode.appendChild(chips);
+  }
+  log.appendChild(replyNode);
+  if(input)input.value="";
+  log.scrollTop=log.scrollHeight;
   if(matchMedia("(min-width:701px)").matches){const n=$("#asstText");if(n)n.focus()}
 }
 function asstGo(v,tab){
@@ -1456,7 +2037,6 @@ function homeHTML(){
     <div class="statstrip"><div class="cell"><b>${state.startups.length}</b><span>startups available</span></div><div class="cell"><b>${state.savedStartups.length}</b><span>saved startups</span></div><div class="cell"><b>${mine.length}</b><span>intro requests sent</span></div></div>
     ${incoming.length?`<div class="card" style="margin:16px 0"><h3 style="margin:0 0 12px">Introduction requests</h3>${incoming.map(m=>{const p=startupById(m.party);return `<div class="meet"><div class="meet-top">${logoOf(m.party)}<div class="grow"><b>${esc(p.name)}</b><div class="dim">Would like to meet you</div></div></div><div class="meet-body">${esc(m.note||"No note provided.")}</div><div class="meet-actions"><button class="btn sm navy" onclick="respondMeeting(${state.meetings.indexOf(m)},'accepted')">Accept</button><button class="btn sm subtle" onclick="respondMeeting(${state.meetings.indexOf(m)},'declined')">Pass</button></div></div>`}).join("")}</div>`:""}
     <div class="card" style="margin-top:16px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><h3 style="margin:0 0 6px">Your investment preferences</h3><p class="dim" style="margin:0">${esc(state.vcMe.sectors.join(", ")||"Choose sectors")} · ${esc(state.vcMe.stages.join(", ")||"Choose stages")} · ${cr(state.vcMe.cheque[0])}–${cr(state.vcMe.cheque[1])}</p>${td>75?`<p class="note" style="margin-top:8px">Your preferences haven't been updated in ${td} days.</p>`:""}</div><button class="btn navy" onclick="thesisModal()">Update preferences</button></div></div>
-    <div class="card" style="margin-top:12px"><h3 style="margin:0 0 8px">Your next step</h3><p class="dim" style="margin:0 0 14px">Browse matched startups, save promising teams, then respond to introductions from your pipeline.</p><div class="actions"><button class="btn navy" onclick="go('discover')">Browse startups</button><button class="btn ghost" onclick="go('saved')">View saved startups</button><button class="btn ghost" onclick="go('meetings')">View introductions</button></div></div>
   </div>`;
 }
 
@@ -1510,9 +2090,9 @@ function vcCard(v){
     <div class="fit"><div class="who">${logoOf(v.id)}<div class="body">
       <div class="nm"><b style="font-size:15px">${esc(v.name)}</b></div>
       <div class="dim" style="font-size:12.5px">${esc(v.type)} · ${esc(v.city)} · replies in ~${esc(v.response)}</div>
-      <div class="why">${v.f.why.map(w=>`<span class="chip acc">${esc(w)}</span>`).join("")}</div></div></div>
+      <div class="fit-explainer"><span class="fit-label">Why it fits</span><div class="why">${v.f.why.map(w=>`<span class="chip acc">${esc(w)}</span>`).join("")}</div></div></div></div>
       <div class="ring" style="--p:${v.f.score}">${v.f.score}</div></div>
-    <div class="meta-row"><span class="chip gold">${cr(v.cheque[0])} &ndash; ${cr(v.cheque[1])}</span>${v.sectors.map(s=>`<span class="chip">${s}</span>`).join("")}${freshChip(v)}</div>
+    <div class="meta-row"><span class="chip gold">Typical cheque: ${cr(v.cheque[0])}–${cr(v.cheque[1])}</span>${freshChip(v)}</div>
     <div class="actions">
       <button class="btn sm" onclick="requestModal('${v.id}')">Request meeting</button>
       <div class="minilinks" style="align-self:center">
@@ -1682,7 +2262,7 @@ function profileHTML(){
   const extra="";
   return `<div class="stagger">
   <div class="page-head"><div><h2 class="apptitle">Profile</h2><p>Your details, at a glance. Changes are made only in Settings.</p></div>
-  <button class="btn ${isF?"":"navy"}" onclick="settingsModal()">Open Settings</button></div>
+  <button class="btn ${isF?"":"navy"}" onclick="go('settings')">Edit profile</button></div>
   <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
     <div class="card">
       <div class="section-label">Account</div>
@@ -1696,44 +2276,48 @@ function profileHTML(){
       ${rows.map(([k,v])=>`<div class="readrow"><span class="k">${k}</span><b>${esc(v)}</b></div>`).join("")}
       <div class="note" style="margin-top:12px">These details power your fit scores everywhere. To change them, use <b>Settings</b> — nothing here is editable directly.</div>
     </div>
-  </div>${extra}
+  </div><div class="profile-account-actions"><button class="quiet" onclick="go('settings')">Edit profile details</button><button class="quiet danger-text" onclick="confirmDeleteAccount()">Delete account</button></div>${extra}
   </div>`;
 }
 
 
 /* ================= settings ================= */
-function settingsModal(){
+function settingsModal(){go("settings")}
+function settingsPageHTML(){
   const isF=state.role==="founder";
-  if(isF){
-    modal(`<h2>Settings — startup card</h2>
-    <p class="dim" style="font-size:13px">Editable only here. Fit scores recalculate the moment you save.</p>
-    <label class="f">Your name</label><input id="stName" value="${esc(state.me.name)}">
-    <label class="f">Startup name</label><input id="stStartup" value="${esc(state.me.startup)}">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div><label class="f">Sector</label><select id="stSector">${SECTORS.map(s=>`<option ${s===state.me.sector?"selected":""}>${s}</option>`).join("")}</select></div>
-      <div><label class="f">Stage</label><select id="stStage">${STAGES.map(s=>`<option ${s===state.me.stage?"selected":""}>${s}</option>`).join("")}</select></div></div>
-    <label class="f">Raising (in \u20B9 crore)</label><input id="stRaising" value="${state.me.raising}">
-    <label class="f">Traction one-liner (powers AI intro notes)</label><input id="stTraction" value="${esc(state.me.traction)}">
-    <div style="display:flex;gap:8px;margin-top:18px"><button class="btn" onclick="saveSettings()">Save changes</button>
-    <button class="btn subtle" onclick="closeModal()">Cancel</button></div>`);
-  }else{
-    modal(`<h2>Settings — fund profile</h2>
-    <p class="dim" style="font-size:13px">Editable only here. Deal flow refilters the moment you save.</p>
-    <label class="f">Fund name</label><input id="stFund" value="${esc(state.vcMe.name)}">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div><label class="f">Type</label><select id="stType">${FUNDTYPES.map(t=>`<option ${t===state.vcMe.type?"selected":""}>${t}</option>`).join("")}</select></div>
-      <div><label class="f">City</label><input id="stCity" value="${esc(state.vcMe.city)}"></div></div>
-    <label class="f">Sectors</label><div class="pickrow" id="stSectors">${SECTORS.map(s=>`<button class="chip ${state.vcMe.sectors.includes(s)?"acc":""}" style="cursor:pointer">${s}</button>`).join("")}</div>
-    <label class="f">Stages</label><div class="pickrow" id="stStages">${STAGES.map(s=>`<button class="chip ${state.vcMe.stages.includes(s)?"acc":""}" style="cursor:pointer">${s}</button>`).join("")}</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div><label class="f">Cheque min (\u20B9 Cr)</label><input id="stMin" value="${state.vcMe.cheque[0]}"></div>
-      <div><label class="f">Cheque max (\u20B9 Cr)</label><input id="stMax" value="${state.vcMe.cheque[1]}"></div></div>
-    ${chequeHint()}
-    <div style="display:flex;gap:8px;margin-top:18px"><button class="btn navy" onclick="saveSettings()">Save changes</button>
-    <button class="btn subtle" onclick="closeModal()">Cancel</button></div>`);
-    document.querySelectorAll("#stSectors .chip").forEach(b=>b.onclick=()=>b.classList.toggle("acc"));
-    document.querySelectorAll("#stStages .chip").forEach(b=>b.onclick=()=>b.classList.toggle("acc"));
-  }
+  const fields=isF?`
+    <section class="edit-section"><div class="section-label">Startup details</div><div class="edit-grid">
+      <div class="edit-field"><label class="f" for="stName">Your name</label><input id="stName" value="${esc(state.me.name)}" autocomplete="name"></div>
+      <div class="edit-field"><label class="f" for="stStartup">Startup name</label><input id="stStartup" value="${esc(state.me.startup)}" placeholder="Your company"></div>
+      <div class="edit-field"><label class="f" for="stSector">Sector</label><select id="stSector">${SECTORS.map(x=>`<option ${x===state.me.sector?"selected":""}>${x}</option>`).join("")}</select></div>
+      <div class="edit-field"><label class="f" for="stStage">Funding stage</label><select id="stStage">${STAGES.map(x=>`<option ${x===state.me.stage?"selected":""}>${x}</option>`).join("")}</select></div>
+      <div class="edit-field"><label class="f" for="stRaising">Funding target (₹ crore)</label><input id="stRaising" type="number" min="0.1" step="0.1" value="${state.me.raising}"></div>
+      <div class="edit-field full"><label class="f" for="stTraction">Traction summary</label><textarea id="stTraction" rows="3" placeholder="A short, clear snapshot of progress">${esc(state.me.traction)}</textarea><small>Keep this concise; it helps investors understand your progress.</small></div>
+    </div></section>`:`
+    <section class="edit-section"><div class="section-label">Fund details</div><div class="edit-grid">
+      <div class="edit-field"><label class="f" for="stFund">Fund name</label><input id="stFund" value="${esc(state.vcMe.name)}"></div>
+      <div class="edit-field"><label class="f" for="stType">Fund type</label><select id="stType">${FUNDTYPES.map(x=>`<option ${x===state.vcMe.type?"selected":""}>${x}</option>`).join("")}</select></div>
+      <div class="edit-field"><label class="f" for="stCity">Base city / geography</label><input id="stCity" value="${esc(state.vcMe.city)}" placeholder="e.g. Bengaluru, India"></div>
+    </div></section>
+    <section class="edit-section"><div class="section-label">Investment focus</div><p class="edit-help">Choose all the sectors and stages your fund actively invests in.</p><div class="edit-field"><label class="f">Sectors</label><div class="pickrow" id="stSectors">${SECTORS.map(x=>`<button type="button" class="chip ${state.vcMe.sectors.includes(x)?"acc":""}" onclick="this.classList.toggle('acc')">${x}</button>`).join("")}</div></div><div class="edit-field" style="margin-top:16px"><label class="f">Funding stages</label><div class="pickrow" id="stStages">${STAGES.map(x=>`<button type="button" class="chip ${state.vcMe.stages.includes(x)?"acc":""}" onclick="this.classList.toggle('acc')">${x}</button>`).join("")}</div></div>
+    <div class="edit-grid" style="margin-top:16px"><div class="edit-field"><label class="f" for="stMin">Minimum cheque (₹ crore)</label><input id="stMin" type="number" min="0" step="0.1" value="${state.vcMe.cheque[0]}"></div><div class="edit-field"><label class="f" for="stMax">Maximum cheque (₹ crore)</label><input id="stMax" type="number" min="0" step="0.1" value="${state.vcMe.cheque[1]}"></div></div>${chequeHint()}</section>`;
+  return `<div class="settings-page stagger"><div class="settings-top"><button class="quiet back-profile" onclick="go('profile')">← Back to profile</button><span class="chip acc">${isF?"Founder profile":"Investor profile"}</span></div><div class="settings-heading"><div><h2 class="apptitle">Edit ${isF?"startup profile":"fund profile"}</h2><p>Keep your information accurate so VCSure can show more relevant matches.</p></div></div><div class="settings-form">${fields}<div class="settings-actions"><button class="btn ${isF?"":"navy"}" onclick="saveSettings()">Save changes</button><button class="btn subtle" onclick="go('profile')">Cancel</button><span class="edit-save-note">Your changes update your profile and matching results.</span></div></div><section class="danger-zone"><div><b>Delete account</b><p>This permanently removes your VCSure account and associated data. This cannot be undone.</p></div><button class="btn danger-btn" onclick="confirmDeleteAccount()">Delete account</button></section></div>`;
+}
+function confirmDeleteAccount(){
+  modal(`<div class="delete-head"><div class="delete-icon">!</div><div><h2>Delete your account?</h2><p class="dim">This action is permanent. Your profile and account data may be deleted, and you will be signed out.</p></div></div><label class="f" for="deleteConfirmText">Type <b>DELETE</b> to confirm</label><input id="deleteConfirmText" autocomplete="off" placeholder="DELETE"><div class="actions" style="margin-top:18px;justify-content:flex-end"><button class="btn subtle" onclick="closeModal()">Keep account</button><button class="btn danger-btn" onclick="deleteAccountNow()">Permanently delete</button></div><p id="deleteStatus" class="dim" style="margin-top:10px;font-size:12px">Account deletion requires the secure delete-account backend function to be deployed.</p>`,"delete-confirm-modal");
+}
+async function deleteAccountNow(){
+  const field=$("#deleteConfirmText");if(!field||field.value.trim()!=="DELETE"){toast("Type DELETE to confirm");return;}
+  if(!sb||!state.auth?.id){toast("Please sign in again before deleting your account.");return;}
+  const status=$("#deleteStatus");if(status)status.textContent="Requesting secure account deletion…";
+  try{
+    const {data,error}=await sb.functions.invoke("delete-account",{body:{confirm:true}});
+    if(error)throw error;
+    if(data&&data.error)throw new Error(data.error);
+    await sb.auth.signOut();
+    try{localStorage.removeItem(KEY);localStorage.removeItem("vcsure_last_role_"+state.auth.id)}catch(_){}
+    state.authed=false;state.auth={name:"",email:"",id:null};state.role=null;entryScreen="landing";view="home";closeModal();render();toast("Your account deletion request was completed.");
+  }catch(err){console.error("VCSure account deletion failed",err);if(status)status.textContent="Deletion wasn't completed. The secure Supabase Edge Function ‘delete-account’ must be deployed and configured first. Your account has not been deleted.";}
 }
 function saveSettings(){
   let capMsg=null;
@@ -1754,7 +2338,7 @@ function saveSettings(){
     const cc=capCheque(mn,mx);
     if(cc){state.vcMe.cheque=cc.cheque;capMsg=capNote(cc);}
   }
-  save();closeModal();void persistCurrentProfile();render();toast(capMsg||"Settings saved — fit scores updated");
+  save();void persistCurrentProfile();go("profile");toast(capMsg||"Profile updated — matching results refreshed");
 }
 
 /* ================= thesis update (VC) ================= */
@@ -2284,6 +2868,9 @@ document.addEventListener("keydown",e=>{
   if(e.key==="/"&&!typing&&view==="discover"){const s=$("#dSearch");if(s){e.preventDefault();s.focus()}}
 });
 
+
+
+
 /* boot */
 load();checkExpiries();render();
 initAuth();
@@ -2302,6 +2889,88 @@ if(sb){
   });
 }
 window.addEventListener("storage",e=>{if(e.key===KEY&&e.newValue){try{state=JSON.parse(e.newValue);render()}catch(_){}}});
+
+
+/* Appearance toggle helper used by the Profile screen */
+window.vcsThemeToggleHTML = window.vcsThemeToggleHTML || function(){
+  const dark=document.documentElement.dataset.theme==="dark";
+  return '<button id="vcsThemeToggle" class="vcs-theme-toggle" type="button" onclick="toggleVCSureTheme()" aria-label="Switch theme" aria-pressed="'+dark+'">'+
+    (dark?'<span class="theme-icon" aria-hidden="true">☀</span><span>Switch to light mode</span>':'<span class="theme-icon" aria-hidden="true">☾</span><span>Switch to dark mode</span>')+
+  '</button>';
+};
+
+</script>
+<script>
+
+(function(){
+  const selector = 'select';
+  let activeWrap = null;
+  function closeAll(){
+    document.querySelectorAll('.vcs-select-wrap.is-open').forEach(w=>{
+      w.classList.remove('is-open');
+      const trigger=w.querySelector('.vcs-select-trigger');
+      const menu=w.querySelector('.vcs-select-menu');
+      if(trigger)trigger.setAttribute('aria-expanded','false');
+      if(menu)menu.remove();
+    });
+    activeWrap=null;
+  }
+  function enhance(select){
+    if(select.dataset.vcsEnhanced==='1' || !select.options || !select.options.length) return;
+    // Leave multiple selects alone; the native multi-select has better keyboard semantics.
+    if(select.multiple) return;
+    const wrap=document.createElement('div');wrap.className='vcs-select-wrap';
+    const trigger=document.createElement('button');trigger.type='button';trigger.className='vcs-select-trigger';
+    trigger.setAttribute('aria-haspopup','listbox');trigger.setAttribute('aria-expanded','false');
+    const label=document.createElement('span');label.className='vcs-select-label';
+    const chevron=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    chevron.setAttribute('viewBox','0 0 24 24');chevron.setAttribute('fill','none');chevron.setAttribute('stroke','currentColor');chevron.setAttribute('stroke-width','2');chevron.setAttribute('stroke-linecap','round');chevron.setAttribute('stroke-linejoin','round');chevron.classList.add('vcs-select-chevron');
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d','m6 9 6 6 6-6');chevron.appendChild(path);
+    trigger.append(label,chevron);
+    select.parentNode.insertBefore(wrap,select);wrap.append(trigger,select);
+    select.dataset.vcsEnhanced='1';select.classList.add('vcs-native-hidden');
+    function sync(){label.textContent=select.selectedOptions[0]?.textContent?.trim()||select.options[0]?.textContent?.trim()||'Choose an option';}
+    sync();
+    select.addEventListener('change',sync);
+    trigger.addEventListener('click',()=>{
+      const isOpen=wrap.classList.contains('is-open');
+      closeAll();if(isOpen)return;
+      wrap.classList.add('is-open');trigger.setAttribute('aria-expanded','true');activeWrap=wrap;
+      const menu=document.createElement('div');menu.className='vcs-select-menu';menu.setAttribute('role','listbox');
+      select.disabled && (menu.style.opacity='.6');
+      Array.from(select.options).forEach((option,index)=>{
+        const item=document.createElement('button');item.type='button';item.className='vcs-select-option';
+        item.setAttribute('role','option');item.setAttribute('aria-selected',String(option.selected));item.disabled=option.disabled;
+        const text=document.createElement('span');text.textContent=option.textContent.trim();
+        const check=document.createElement('span');check.className='vcs-select-check';check.textContent='✓';check.setAttribute('aria-hidden','true');
+        item.append(text,check);
+        item.addEventListener('click',()=>{
+          select.selectedIndex=index;
+          select.dispatchEvent(new Event('change',{bubbles:true}));
+          select.dispatchEvent(new Event('input',{bubbles:true}));
+          sync();closeAll();trigger.focus();
+        });
+        menu.appendChild(item);
+      });
+      wrap.appendChild(menu);
+      const chosen=menu.querySelector('[aria-selected="true"]');
+      if(chosen)chosen.scrollIntoView({block:'nearest'});
+    });
+    select.addEventListener('vcs-refresh',sync);
+  }
+  function scan(root=document){root.querySelectorAll(selector).forEach(enhance);}
+  document.addEventListener('click',e=>{if(activeWrap&&!activeWrap.contains(e.target))closeAll()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAll()});
+  document.addEventListener('DOMContentLoaded',()=>scan());
+  const observer=new MutationObserver(records=>records.forEach(record=>{
+    record.addedNodes.forEach(node=>{
+      if(node.nodeType===1){if(node.matches?.(selector))enhance(node);scan(node)}
+    });
+  }));
+  if(document.documentElement)observer.observe(document.documentElement,{childList:true,subtree:true});
+  if(document.readyState!=='loading')scan();
+})();
+
 </script>
 </body>
 </html>
