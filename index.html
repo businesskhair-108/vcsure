@@ -665,6 +665,7 @@ function load(){
   state.me={...defaults.me,...(state.me||{})};
   state.vcMe={...defaults.vcMe,...(state.vcMe||{})};
   state.role=(state.role==="founder"||state.role==="vc")?state.role:null;
+  if(!Array.isArray(state.availableRoles))state.availableRoles=[];
   for(const k of ["startups","vcs","savedVCs","savedStartups","meetings","deckViews","unlocked","deckShares","partners","partnerThreads"]){
     if(!Array.isArray(state[k]))state[k]=Array.isArray(defaults[k])?defaults[k]:[];
   }
@@ -743,7 +744,7 @@ function expiresIn(m){const d=Math.ceil((m.expiresAt-Date.now())/864e5);return d
 
 /* ================= router ================= */
 let view="welcome";
-function go(v){view=v;render();window.scrollTo({top:0});}
+function go(v){view=v;render();window.scrollTo({top:0});if(state?.authed&&state?.auth?.id&&state?.role){try{localStorage.setItem("vcsure_last_role_"+state.auth.id,state.role);}catch(_){}}}
 /* ================= pitch-deck inbox pill ================= */
 function pendingShare(){
   if(state.role!=="vc")return null;
@@ -845,6 +846,7 @@ function drawNav(){
     ${pend?`<button class="nav-tab" onclick="go('meetings')" style="color:var(--red)">${pend} new</button>`:""}</div>
     <div class="acct"><div class="who"><b>${esc(state.auth.name)}</b><span>${isF?esc(state.me.startup||""):esc(state.vcMe.name||"")}</span></div>
     <div class="gavatar">${initials(state.auth.name||"W")}</div>
+    ${`<button class="linkout" onclick="switchPortal()">${state.role==="founder"?"Investor portal ↔":"Founder portal ↔"}</button>`}
     <button class="linkout askbtn" onclick="openAssistant()" aria-label="Help"><span class="dm">Help</span><span class="mm">Ask</span></button>
     <button class="linkout" onclick="signOut()">Sign out</button></div></div></nav>
     <div class="bottomNav">
@@ -1133,8 +1135,6 @@ async function doEmailAuth(){
 let acceptingAuthUserId=null;
 async function acceptAuthenticatedUser(user,session){
   if(!user)return;
-  /* Prevent concurrent restoration, but don't trust a persisted local role as proof
-     that this user's Supabase profile and portal are ready. */
   if(acceptingAuthUserId===user.id)return;
   acceptingAuthUserId=user.id;
   try{
@@ -1147,57 +1147,48 @@ async function acceptAuthenticatedUser(user,session){
     }
     state.authed=true;
     state.auth={name:meta.full_name||meta.name||user.email?.split("@")[0]||"User",email:user.email||"",id:user.id,provider:(user.app_metadata&&user.app_metadata.provider)||"email"};
-    let pendingRole=null;
-    try{pendingRole=localStorage.getItem("vcsure_pending_role");localStorage.removeItem("vcsure_pending_role");}catch(_){}
-    /* Always restore profile before routing a returning user to a portal. */
-    const role=await loadProfileForUser(user);
-    if(!role){
-      const candidate=pendingRole||meta.role||window._prefRole||state.role||null;
-      state.role=(candidate==="founder"||candidate==="vc")?candidate:null;
-    }
+    let pendingRole=null,preferredRole=null;
+    try{pendingRole=localStorage.getItem("vcsure_pending_role");localStorage.removeItem("vcsure_pending_role");preferredRole=localStorage.getItem("vcsure_last_role_"+user.id);}catch(_){}
+    const role=await loadProfileForUser(user,preferredRole||pendingRole||meta.role||window._prefRole||null);
+    if(!role){const candidate=pendingRole||meta.role||window._prefRole||state.role||null;state.role=(candidate==="founder"||candidate==="vc")?candidate:null;}
     if(state.role!=="founder"&&state.role!=="vc")state.role=null;
     save();closeModal();authBusy=false;
     if(!state.role){view="welcome";render();roleModal();return;}
     if(!onboarded()){view="welcome";render();onboardModal();return;}
     view="home";render();
   }catch(err){
-    console.error("VCSure login/portal restoration failed",err);
-    authBusy=false;
+    console.error("VCSure login/portal restoration failed",err);authBusy=false;
     const root=$("#viewRoot");
     if(root){root.classList.remove("portal-content");root.innerHTML=`<section style="max-width:640px;margin:40px auto;padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:16px"><h2>We couldn't open your portal</h2><p class="dim">Your sign-in may have succeeded, but VCSure couldn't restore your profile. Diagnostic:</p><pre style="white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface-2);padding:12px;border-radius:8px;font-size:12px">${esc(String(err?.message||err||"Unknown profile restoration error"))}</pre><button class="btn" onclick="retryPortalRestore()">Try again</button><button class="btn ghost" style="margin-left:8px" onclick="signOut()">Sign out</button></section>`;}
   }finally{acceptingAuthUserId=null;}
 }
 async function retryPortalRestore(){
-  try{
-    const {data,error}=await sb.auth.getSession();if(error)throw error;
-    if(data.session?.user){await acceptAuthenticatedUser(data.session.user,data.session);return;}
-    state.authed=false;state.role=null;entryScreen="landing";render();
-  }catch(err){
-    console.error("VCSure portal retry failed",err);
-    const root=$("#viewRoot");if(root)root.innerHTML=`<section style="max-width:640px;margin:40px auto;padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:16px"><h2>Still unable to open the portal</h2><p class="dim">Diagnostic:</p><pre style="white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface-2);padding:12px;border-radius:8px;font-size:12px">${esc(String(err?.message||err||"Unknown retry error"))}</pre><button class="btn" onclick="retryPortalRestore()">Retry</button></section>`;
-  }
+  try{const {data,error}=await sb.auth.getSession();if(error)throw error;if(data.session?.user){await acceptAuthenticatedUser(data.session.user,data.session);return;}state.authed=false;state.role=null;entryScreen="landing";render();}
+  catch(err){console.error("VCSure portal retry failed",err);const root=$("#viewRoot");if(root)root.innerHTML=`<section style="max-width:640px;margin:40px auto;padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:16px"><h2>Still unable to open the portal</h2><p class="dim">Diagnostic:</p><pre style="white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface-2);padding:12px;border-radius:8px;font-size:12px">${esc(String(err?.message||err||"Unknown retry error"))}</pre><button class="btn" onclick="retryPortalRestore()">Retry</button></section>`;}
 }
-async function loadProfileForUser(user){
+async function loadProfileForUser(user,preferredRole){
   if(!sb||!user)return null;
-  try{
-    const {data:founder,error:fErr}=await sb.from("founder_profiles").select("*").eq("id",user.id).maybeSingle();
-    if(fErr)throw fErr;
-    if(founder){
-      state.role="founder";
-      state.me={...state.me,name:founder.full_name||state.auth.name,startup:founder.startup_name||"",sector:founder.sector||"SaaS",stage:founder.funding_stage||"Pre-seed",raising:founder.funding_ask==null?2:Number(founder.funding_ask),traction:founder.traction||"",geography:founder.geography||"",businessModel:founder.business_model||""};
-      return "founder";
-    }
-  }catch(err){console.error("VCSure founder profile load failed",err);}
-  try{
-    const {data:fund,error:vErr}=await sb.from("fund_profiles").select("*").eq("id",user.id).maybeSingle();
-    if(vErr && vErr.code!=="42P01")throw vErr;
-    if(fund){
-      state.role="vc";
-      state.vcMe={...state.vcMe,name:fund.fund_name||state.auth.name,type:fund.fund_type||"Micro-VC",city:fund.geography||"India",sectors:Array.isArray(fund.sectors)?fund.sectors:["SaaS"],stages:Array.isArray(fund.stages)?fund.stages:["Pre-seed"],cheque:[Number(fund.min_cheque)||1,Number(fund.max_cheque)||4],thesisNote:fund.thesis_note||"",thesisUpdatedAt:fund.thesis_updated_at?new Date(fund.thesis_updated_at).getTime():Date.now()};
-      return "vc";
-    }
-  }catch(err){console.error("VCSure fund profile load failed",err);}
-  return null;
+  let founder=null,fund=null;
+  try{const {data,error}=await sb.from("founder_profiles").select("*").eq("id",user.id).maybeSingle();if(error)throw error;founder=data||null;}catch(err){console.error("VCSure founder profile load failed",err);}
+  try{const {data,error}=await sb.from("fund_profiles").select("*").eq("id",user.id).maybeSingle();if(error&&error.code!=="42P01")throw error;fund=data||null;}catch(err){console.error("VCSure fund profile load failed",err);}
+  state.availableRoles=[];
+  if(founder){state.availableRoles.push("founder");state.me={...state.me,name:founder.full_name||state.auth.name,startup:founder.startup_name||"",sector:founder.sector||"SaaS",stage:founder.funding_stage||"Pre-seed",raising:founder.funding_ask==null?2:Number(founder.funding_ask),traction:founder.traction||"",geography:founder.geography||"",businessModel:founder.business_model||""};}
+  if(fund){state.availableRoles.push("vc");state.vcMe={...state.vcMe,name:fund.fund_name||state.auth.name,type:fund.fund_type||"Micro-VC",city:fund.geography||"India",sectors:Array.isArray(fund.sectors)?fund.sectors:["SaaS"],stages:Array.isArray(fund.stages)?fund.stages:["Pre-seed"],cheque:[Number(fund.min_cheque)||1,Number(fund.max_cheque)||4],thesisNote:fund.thesis_note||"",thesisUpdatedAt:fund.thesis_updated_at?new Date(fund.thesis_updated_at).getTime():Date.now()};}
+  const wanted=(preferredRole==="founder"||preferredRole==="vc")?preferredRole:null;
+  if(wanted&&state.availableRoles.includes(wanted))state.role=wanted;
+  else if(state.availableRoles.length===1)state.role=state.availableRoles[0];
+  else if(state.availableRoles.length===2)state.role=(state.role&&state.availableRoles.includes(state.role))?state.role:"founder";
+  else return null;
+  return state.role;
+}
+function switchPortal(){
+  if(!state.authed||!state.role)return;
+  const next=state.role==="founder"?"vc":"founder";
+  state.role=next;view="home";pTab="overview";closeModal();
+  try{localStorage.setItem("vcsure_last_role_"+state.auth.id,next);}catch(_){}
+  save();
+  if(!onboarded()){render();onboardModal();return;}
+  render();
 }
 async function persistCurrentProfile(){
   if(!sb||!state.authed||!state.auth?.id||!state.role)return false;
@@ -1207,12 +1198,16 @@ async function persistCurrentProfile(){
       const payload={id:state.auth.id,full_name:state.me.name||state.auth.name||null,startup_name:state.me.startup||null,sector:state.me.sector||null,funding_stage:state.me.stage||null,funding_ask:Number(state.me.raising)||null,geography:state.me.geography||null,business_model:state.me.businessModel||null,traction:state.me.traction||null,updated_at:now};
       const {error}=await sb.from("founder_profiles").upsert(payload,{onConflict:"id"});
       if(error)throw error;
+      if(!Array.isArray(state.availableRoles))state.availableRoles=[];if(!state.availableRoles.includes("founder"))state.availableRoles.push("founder");
+      try{localStorage.setItem("vcsure_last_role_"+state.auth.id,"founder");}catch(_){}
       return true;
     }
     if(state.role==="vc"){
       const payload={id:state.auth.id,fund_name:state.vcMe.name||state.auth.name||null,fund_type:state.vcMe.type||null,geography:state.vcMe.city||null,sectors:state.vcMe.sectors||[],stages:state.vcMe.stages||[],min_cheque:Number(state.vcMe.cheque?.[0])||null,max_cheque:Number(state.vcMe.cheque?.[1])||null,thesis_note:state.vcMe.thesisNote||null,thesis_updated_at:new Date(state.vcMe.thesisUpdatedAt||Date.now()).toISOString(),updated_at:now};
       const {error}=await sb.from("fund_profiles").upsert(payload,{onConflict:"id"});
       if(error)throw error;
+      if(!Array.isArray(state.availableRoles))state.availableRoles=[];if(!state.availableRoles.includes("vc"))state.availableRoles.push("vc");
+      try{localStorage.setItem("vcsure_last_role_"+state.auth.id,"vc");}catch(_){}
       return true;
     }
   }catch(err){console.error("VCSure profile save failed",err);const w=$("#saveWarn");if(w){w.hidden=false;w.textContent="Your changes are saved on this device, but we couldn't sync your profile. Check your connection and Supabase table setup.";}return false;}
@@ -1252,8 +1247,11 @@ function roleModal(){
   </div>`);
 }
 async function pickRole(r){
-  state.role=r;save();closeModal();
-  if(sb&&state.auth?.id){try{const {error}=await sb.auth.updateUser({data:{role:r}});if(error)console.warn("Could not save role metadata",error);}catch(err){console.warn("Could not save role metadata",err);}}
+  state.role=r;
+  if(!Array.isArray(state.availableRoles))state.availableRoles=[];
+  if(!state.availableRoles.includes(r))state.availableRoles.push(r);
+  try{if(state.auth?.id)localStorage.setItem("vcsure_last_role_"+state.auth.id,r);}catch(_){}
+  save();closeModal();
   if(!onboarded())onboardModal();else{go("home");void persistCurrentProfile();}
 }
 
@@ -1401,79 +1399,21 @@ function homeHTML(){
   const incoming=roleMeetings().filter(m=>m.direction==="in"&&m.status==="requested");
   if(isF){
     return `<div class="stagger">
-    <div class="page-head"><div><h2 class="apptitle">Getting ${esc(state.me.startup)} funded, minus the noise.</h2>
-    <p>See which funds invest in ${esc(state.me.sector)} at ${esc(state.me.stage)} for ${cr(state.me.raising)} — then request one warm intro at a time.</p></div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-      <button class="btn" onclick="go('discover')">Browse VCs</button>
-      <button class="quiet" onclick="openAssistant()">Need help? Help</button>
-    </div></div>
-
-    <div class="card goldy" style="margin-bottom:18px"><b>\u20B90 while you raise.</b> <span class="dim">No subscription, ever. A flat \u20B940,000 success fee applies only after a round closes through a VC Sure intro.</span></div>
-
-    ${incoming.map(m=>{const p=vcById(m.party);
-      return `<div class="meet" style="border-color:rgba(212,167,58,.45);background:var(--gold-soft)">
-      <div class="meet-top">${logoOf(m.party)}<div class="grow"><b>${esc(p.name)}</b> <span class="dim" style="font-size:13px">requested a meeting with you</span></div></div>
-      <div class="meet-actions">
-      <button class="btn sm" onclick="respondMeeting(${state.meetings.indexOf(m)},'accepted')">Accept</button>
-      <button class="btn sm subtle" onclick="respondMeeting(${state.meetings.indexOf(m)},'declined')">Pass</button></div>
-      <div class="meet-body"><div class="dim" style="font-size:13px">"${esc(m.note)}"</div></div></div>`}).join("")}
-
-    <div class="statstrip">
-      <div class="cell"><b>${state.vcs.length}</b><span>funds on VC Sure</span></div>
-      <div class="cell"><b>${state.savedVCs.length}</b><span>VCs shortlisted</span></div>
-      <div class="cell"><b>${mine.length}</b><span>meetings you requested</span></div>
-      <div class="cell"><b>${state.deckViews.filter(v=>v.startup==="me").length}</b><span>funds opened your deck</span></div>
-    </div>
-
-    <div class="card">
-      <div class="howrow" onclick="toggleHow()">
-        <div class="section-label" style="margin:0">How VC Sure works</div>
-        <button class="quiet" onclick="event.stopPropagation();toggleHow()">${howOpen?"Hide":"Show"} the 3 steps</button>
-      </div>
-      ${howOpen?`<div class="steps" style="margin-top:16px">
-        <div class="step"><span class="n">01</span><b>Your card is your pitch</b><span>Sector, stage and ask decide your fit score — nothing else.</span></div>
-        <div class="step"><span class="n">02</span><b>See fit before you pitch</b><span>Fit scores, the 'why', and thesis freshness on every fund card.</span></div>
-        <div class="step"><span class="n">03</span><b>One warm intro, on a clock</b><span>A short introduction helps explain the fit. Accepts, passes or a system pass within 7 days.</span></div>
-      </div>`:""}
-    </div></div>`;
+      <div class="page-head"><div><span class="hero-eyebrow">YOUR FOUNDER HOME</span><h2 class="apptitle">Let's find your investors.</h2><p>We’ll help you find funds that match your startup. Start by browsing your matches.</p></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><button class="btn" onclick="go('discover')">Find investors →</button><button class="quiet" onclick="go('profile')">Edit startup profile</button></div></div>
+      <div class="statstrip"><div class="cell"><b>${state.vcs.length}</b><span>investors available</span></div><div class="cell"><b>${state.savedVCs.length}</b><span>saved investors</span></div><div class="cell"><b>${mine.length}</b><span>intro requests sent</span></div></div>
+      ${incoming.length?`<div class="card" style="margin:16px 0"><h3 style="margin:0 0 12px">Investors want to meet you</h3>${incoming.map(m=>{const p=vcById(m.party);return `<div class="meet"><div class="meet-top">${logoOf(m.party)}<div class="grow"><b>${esc(p.name)}</b><div class="dim">Requested an introduction</div></div></div><div class="meet-body">${esc(m.note||"No note provided.")}</div><div class="meet-actions"><button class="btn sm" onclick="respondMeeting(${state.meetings.indexOf(m)},'accepted')">Accept</button><button class="btn sm subtle" onclick="respondMeeting(${state.meetings.indexOf(m)},'declined')">Pass</button></div></div>`}).join("")}</div>`:""}
+      <div class="card" style="margin-top:16px"><h3 style="margin:0 0 8px">Your next step</h3><p class="dim" style="margin:0 0 14px">Browse investors, save the ones you like, then request an introduction. You can track everything in your pipeline.</p><div class="actions"><button class="btn" onclick="go('discover')">Browse investors</button><button class="btn ghost" onclick="go('saved')">View saved investors</button></div></div>
+      <div class="card" style="margin-top:12px"><button class="quiet" onclick="toggleHow()">${howOpen?"Hide":"How VCSure works"} ${howOpen?"↑":"↓"}</button>${howOpen?`<div class="steps" style="margin-top:12px"><div class="step"><span class="n">1</span><b>Find a match</b><span>See which investors fit your startup.</span></div><div class="step"><span class="n">2</span><b>Request an introduction</b><span>Tell them briefly why you’re a fit.</span></div><div class="step"><span class="n">3</span><b>Track your progress</b><span>Manage replies and introductions in one place.</span></div></div>`:""}</div>
+    </div>`;
   }
   const td=daysSince(state.vcMe.thesisUpdatedAt);
   return `<div class="stagger">
-  <div class="page-head"><div><h2 class="apptitle">Deal flow that comes to you, ${esc(state.vcMe.name)}.</h2>
-  <p class="dim">Everything below is filtered live by your sprint thesis — keep it fresh.</p></div>
-  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-    <button class="btn navy" onclick="go('discover')">Browse matches</button>
-    <button class="quiet" onclick="openAssistant()">Need help? Help</button>
-  </div></div>
-
-  <div class="card" style="margin-bottom:18px;border-color:${td>75?"rgba(180,83,9,.4)":"var(--border)"}">
-    <div class="section-label">Sprint thesis — active ${td}d</div>
-    <div style="display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:center">
-      <div style="flex:1;min-width:240px">
-        <div style="font-size:14px">${esc(state.vcMe.thesisNote||"This quarter: "+state.vcMe.sectors.join(", ")+" at "+state.vcMe.stages.join("/")+" stages, cheques of "+cr(state.vcMe.cheque[0])+" to "+cr(state.vcMe.cheque[1])+".")}</div>
-        <div style="font-size:12.5px;margin-top:6px;color:#47536a;font-weight:500">Founders see these parameters the moment you update them — no more pitching against last quarter's thesis.</div>
-      </div>
-      <button class="btn navy" onclick="thesisModal()">Update sprint thesis</button>
-    </div>
-    ${td>75?`<div class="note" style="margin-top:10px;border-color:rgba(180,83,9,.4);color:var(--amber)">Your thesis is ${td} days old — founders may be filtering on outdated parameters.</div>`:""}
-  </div>
-
-  ${incoming.map(m=>{const p=startupById(m.party);
-    return `<div class="meet" style="border-color:rgba(212,167,58,.45);background:var(--gold-soft)">
-    <div class="meet-top">${logoOf(m.party)}<div class="grow"><b>${esc(p.name)}</b> <span class="dim" style="font-size:13px">wants to meet</span></div></div>
-    <div class="meet-actions">
-    <button class="btn sm navy" onclick="respondMeeting(${state.meetings.indexOf(m)},'accepted')">Accept</button>
-    <button class="btn sm subtle" onclick="respondMeeting(${state.meetings.indexOf(m)},'declined')">Pass</button></div>
-    <div class="meet-body"><div class="dim" style="font-size:13px">"${esc(m.note)}"</div></div></div>`}).join("")}
-
-  <div class="statstrip">
-    <div class="cell"><b>${state.startups.length}</b><span>startups in the feed</span></div>
-    <div class="cell"><b>${state.savedStartups.length}</b><span>deals in pipeline</span></div>
-    <div class="cell"><b>${mine.length}</b><span>meetings you requested</span></div>
-    <div class="cell"><b>${roleMeetings().filter(m=>m.status==="accepted"||m.status==="completed").length}</b><span>accepted intros</span></div>
-  </div>
-
-  <div class="card" style="margin-top:16px"><b>Keep your pipeline moving</b><p class="dim" style="margin:6px 0 12px">Review new matches, respond to introductions, and keep your investment thesis current.</p><div class="actions"><button class="btn navy" onclick="go('saved')">Open pipeline</button><button class="btn ghost" onclick="go('meetings')">Review requests</button></div></div></div>`;
+    <div class="page-head"><div><span class="hero-eyebrow">YOUR INVESTOR HOME</span><h2 class="apptitle">Find startups worth meeting.</h2><p>See startups that fit your investment interests and manage introductions in one place.</p></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><button class="btn navy" onclick="go('discover')">Find startups →</button><button class="quiet" onclick="go('profile')">Edit fund profile</button></div></div>
+    <div class="statstrip"><div class="cell"><b>${state.startups.length}</b><span>startups available</span></div><div class="cell"><b>${state.savedStartups.length}</b><span>saved startups</span></div><div class="cell"><b>${mine.length}</b><span>intro requests sent</span></div></div>
+    ${incoming.length?`<div class="card" style="margin:16px 0"><h3 style="margin:0 0 12px">Introduction requests</h3>${incoming.map(m=>{const p=startupById(m.party);return `<div class="meet"><div class="meet-top">${logoOf(m.party)}<div class="grow"><b>${esc(p.name)}</b><div class="dim">Would like to meet you</div></div></div><div class="meet-body">${esc(m.note||"No note provided.")}</div><div class="meet-actions"><button class="btn sm navy" onclick="respondMeeting(${state.meetings.indexOf(m)},'accepted')">Accept</button><button class="btn sm subtle" onclick="respondMeeting(${state.meetings.indexOf(m)},'declined')">Pass</button></div></div>`}).join("")}</div>`:""}
+    <div class="card" style="margin-top:16px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><h3 style="margin:0 0 6px">Your investment preferences</h3><p class="dim" style="margin:0">${esc(state.vcMe.sectors.join(", ")||"Choose sectors")} · ${esc(state.vcMe.stages.join(", ")||"Choose stages")} · ${cr(state.vcMe.cheque[0])}–${cr(state.vcMe.cheque[1])}</p>${td>75?`<p class="note" style="margin-top:8px">Your preferences haven't been updated in ${td} days.</p>`:""}</div><button class="btn navy" onclick="thesisModal()">Update preferences</button></div></div>
+    <div class="card" style="margin-top:12px"><h3 style="margin:0 0 8px">Your next step</h3><p class="dim" style="margin:0 0 14px">Browse matched startups, save promising teams, then respond to introductions from your pipeline.</p><div class="actions"><button class="btn navy" onclick="go('discover')">Browse startups</button><button class="btn ghost" onclick="go('saved')">View saved startups</button><button class="btn ghost" onclick="go('meetings')">View introductions</button></div></div>
+  </div>`;
 }
 
 /* Optional paid add-ons and external integrations removed. */
