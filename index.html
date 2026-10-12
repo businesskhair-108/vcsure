@@ -851,7 +851,7 @@ function drawNav(){
     <div class="gavatar">${initials(state.auth.name||"W")}</div>
     ${`<button class="linkout" onclick="switchPortal()" aria-label="Switch portal">${state.role==="founder"?"Investor ↔":"Founder ↔"}</button>`}
     <button class="linkout askbtn" onclick="openAssistant()" aria-label="Help"><span class="dm">Help</span><span class="mm">Ask</span></button>
-    <button class="linkout signoutbtn" onclick="signOut()"><span class="dm">Sign out</span><span class="mm">Exit</span></button></div></div></nav>
+    </div></div></nav>
     <div class="bottomNav">
       ${bar.map(([k,l])=>`<button class="bTab ${view===k?"active":""}" onclick="go('${k}')">${ICONS[k]}<span>${short[l]||l}</span>${k==="meetings"&&pend?`<span class="bdg">${pend}</span>`:""}${k==="partners"&&unreadP?`<span class="bdg">${unreadP}</span>`:""}</button>`).join("")}
       ${rest.length?`<button class="bTab ${rest.some(r=>r[0]===view)?"active":""}" onclick="moreSheet()">${ICONS.more}<span>More</span>${unreadP?`<span class="bdg">${unreadP}</span>`:""}</button>`:""}
