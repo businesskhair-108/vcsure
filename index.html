@@ -2280,6 +2280,9 @@ function previewOwnDeck(){deckModal("me")}
 function exportData(){try{const b=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="vcsure-data-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}catch(e){console.warn(e)}}
 function resetAll(){if(confirm("Clear locally stored VCSure data on this device?")){localStorage.removeItem(KEY);location.reload();}}
 
+/* Deck viewer timer: shared by deck preview and modal cleanup. */
+let deckTimer = null;
+
 /* ================= modal utils ================= */
 let _lastFocus=null;
 function modal(html,extra){_lastFocus=document.activeElement;$("#modalRoot").innerHTML=`<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="modal wide ${extra||""}" role="dialog" aria-modal="true" tabindex="-1">${html}</div></div>`;
