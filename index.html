@@ -801,7 +801,7 @@ function render(){
   }catch(err){
     console.error("VCSure render failed",err);
     const v=$("#viewRoot");
-    if(v){v.classList.remove("portal-content");v.innerHTML=`<section style="max-width:640px;margin:40px auto;padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:16px"><h2>VCSure couldn't display this screen</h2><p class="dim">Your saved account hasn't been deleted. Try reloading the portal, or sign out and sign in again.</p><button class="btn" onclick="location.reload()">Reload VCSure</button><button class="btn ghost" style="margin-left:8px" onclick="signOut()">Sign out</button></section>`;}
+    if(v){v.classList.remove("portal-content");v.innerHTML=`<section style="max-width:640px;margin:40px auto;padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:16px"><h2>VCSure couldn't display this screen</h2><p class="dim">Your saved account hasn't been deleted. Diagnostic:</p><pre style="white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface-2);padding:12px;border-radius:8px;font-size:12px">${esc(String(err?.message||err||"Unknown render error"))}</pre><button class="btn" onclick="location.reload()">Reload VCSure</button><button class="btn ghost" style="margin-left:8px" onclick="signOut()">Sign out</button></section>`;}
   }
 }
 const ICONS={
@@ -1164,7 +1164,7 @@ async function acceptAuthenticatedUser(user,session){
     console.error("VCSure login/portal restoration failed",err);
     authBusy=false;
     const root=$("#viewRoot");
-    if(root){root.classList.remove("portal-content");root.innerHTML=`<section style="max-width:640px;margin:40px auto;padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:16px"><h2>We couldn't open your portal</h2><p class="dim">Your sign-in may have succeeded, but VCSure couldn't restore your profile. Try again, or sign out and sign in again.</p><button class="btn" onclick="retryPortalRestore()">Try again</button><button class="btn ghost" style="margin-left:8px" onclick="signOut()">Sign out</button></section>`;}
+    if(root){root.classList.remove("portal-content");root.innerHTML=`<section style="max-width:640px;margin:40px auto;padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:16px"><h2>We couldn't open your portal</h2><p class="dim">Your sign-in may have succeeded, but VCSure couldn't restore your profile. Diagnostic:</p><pre style="white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface-2);padding:12px;border-radius:8px;font-size:12px">${esc(String(err?.message||err||"Unknown profile restoration error"))}</pre><button class="btn" onclick="retryPortalRestore()">Try again</button><button class="btn ghost" style="margin-left:8px" onclick="signOut()">Sign out</button></section>`;}
   }finally{acceptingAuthUserId=null;}
 }
 async function retryPortalRestore(){
@@ -1174,7 +1174,7 @@ async function retryPortalRestore(){
     state.authed=false;state.role=null;entryScreen="landing";render();
   }catch(err){
     console.error("VCSure portal retry failed",err);
-    const root=$("#viewRoot");if(root)root.innerHTML=`<section style="max-width:640px;margin:40px auto;padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:16px"><h2>Still unable to open the portal</h2><p class="dim">Check your connection and try again. Your account data has not been intentionally deleted.</p><button class="btn" onclick="retryPortalRestore()">Retry</button></section>`;
+    const root=$("#viewRoot");if(root)root.innerHTML=`<section style="max-width:640px;margin:40px auto;padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:16px"><h2>Still unable to open the portal</h2><p class="dim">Diagnostic:</p><pre style="white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface-2);padding:12px;border-radius:8px;font-size:12px">${esc(String(err?.message||err||"Unknown retry error"))}</pre><button class="btn" onclick="retryPortalRestore()">Retry</button></section>`;
   }
 }
 async function loadProfileForUser(user){
