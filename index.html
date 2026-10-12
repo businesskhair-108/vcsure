@@ -1968,6 +1968,12 @@ function sendChat(idx,text){
   if(view==="messages")msgRefresh();
   else if(view==="meetings"||view==="home")render();
 }
+function unreadPartners(){
+  /* Count partner conversations with unread replies; tolerate migrated/empty state. */
+  return (state && Array.isArray(state.partnerThreads))
+    ? state.partnerThreads.filter(t=>!!(t && t.unread)).length
+    : 0;
+}
 function openPartnerThread(id){openThreadId=id;const t=state.partnerThreads.find(x=>x.id===id);if(t){t.unread=false;save()}go("partners")}
 function closePartnerThread(){openThreadId=null;go("partners")}
 function partnersHTML(){
