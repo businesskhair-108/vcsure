@@ -476,12 +476,15 @@ label.f{display:block;font-size:12px;font-weight:700;color:var(--ink-dim);margin
 .mRow .bdg2{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;border-radius:99px;padding:1px 7px}
 @media(max-width:700px){
   .nav-tabs{display:none!important}
-  .nav-inner{padding:9px 20px;gap:8px}
-  .logo{font-size:15px;gap:8px}
+  .nav-inner{padding:10px 12px;gap:7px;flex-wrap:nowrap;min-width:0}
+  .logo{font-size:15px;gap:7px;flex:0 0 auto;min-width:0}
   .logo small{display:none}
-  .logo-mark{width:28px;height:28px}
+  .logo-mark{width:28px;height:28px;flex:0 0 28px}
   .acct .who{display:none}
-  .acct{margin-left:auto}
+  .acct{margin-left:auto;display:flex;align-items:center;gap:5px;flex:0 1 auto;min-width:0;white-space:nowrap}
+  .acct .gavatar{width:30px;height:30px;flex:0 0 30px}
+  .acct .linkout{font-size:12px;padding:6px 5px;white-space:nowrap}
+  .acct .askbtn{min-width:0}
   .bottomNav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(250,248,244,.97);backdrop-filter:blur(12px);border-top:1px solid var(--border);padding:6px 4px calc(6px + env(safe-area-inset-bottom));justify-content:space-around}
   .wrap{padding:16px 20px calc(122px + env(safe-area-inset-bottom))}
   .footer{padding:14px 20px calc(108px + env(safe-area-inset-bottom))}
@@ -846,9 +849,9 @@ function drawNav(){
     ${pend?`<button class="nav-tab" onclick="go('meetings')" style="color:var(--red)">${pend} new</button>`:""}</div>
     <div class="acct"><div class="who"><b>${esc(state.auth.name)}</b><span>${isF?esc(state.me.startup||""):esc(state.vcMe.name||"")}</span></div>
     <div class="gavatar">${initials(state.auth.name||"W")}</div>
-    ${`<button class="linkout" onclick="switchPortal()">${state.role==="founder"?"Investor portal ↔":"Founder portal ↔"}</button>`}
+    ${`<button class="linkout" onclick="switchPortal()" aria-label="Switch portal">${state.role==="founder"?"Investor ↔":"Founder ↔"}</button>`}
     <button class="linkout askbtn" onclick="openAssistant()" aria-label="Help"><span class="dm">Help</span><span class="mm">Ask</span></button>
-    <button class="linkout" onclick="signOut()">Sign out</button></div></div></nav>
+    <button class="linkout signoutbtn" onclick="signOut()"><span class="dm">Sign out</span><span class="mm">Exit</span></button></div></div></nav>
     <div class="bottomNav">
       ${bar.map(([k,l])=>`<button class="bTab ${view===k?"active":""}" onclick="go('${k}')">${ICONS[k]}<span>${short[l]||l}</span>${k==="meetings"&&pend?`<span class="bdg">${pend}</span>`:""}${k==="partners"&&unreadP?`<span class="bdg">${unreadP}</span>`:""}</button>`).join("")}
       ${rest.length?`<button class="bTab ${rest.some(r=>r[0]===view)?"active":""}" onclick="moreSheet()">${ICONS.more}<span>More</span>${unreadP?`<span class="bdg">${unreadP}</span>`:""}</button>`:""}
